@@ -67,8 +67,13 @@ namespace Engine3D_Tests
             const double minMillionRaysPerSec = 1.4;
             const double maxMillionRaysPerSec = 1.7;
 #else
-            const double minMillionRaysPerSec = 2.7;
-            const double maxMillionRaysPerSec = 3.1;
+            // AppVeyor build server
+            const double minMillionRaysPerSec = 7.9;
+            const double maxMillionRaysPerSec = 8.1;
+
+            // my laptop on Power Saver mode
+            //const double minMillionRaysPerSec = 2.7;
+            //const double maxMillionRaysPerSec = 3.1;
 #endif
 
             const int numRays = 1000000;
@@ -100,8 +105,13 @@ namespace Engine3D_Tests
             const double minMillionRaysPerSec = 1.1;
             const double maxMillionRaysPerSec = 1.3;
 #else
-            const double minMillionRaysPerSec = 3.0;
-            const double maxMillionRaysPerSec = 3.7;
+            // AppVeyor build server
+            const double minMillionRaysPerSec = 7.9;
+            const double maxMillionRaysPerSec = 8.1;
+
+            // my laptop on Power Saver mode
+            //const double minMillionRaysPerSec = 3.0;
+            //const double maxMillionRaysPerSec = 3.7;
 #endif
 
             const int numRays = 1000000;
@@ -135,8 +145,13 @@ namespace Engine3D_Tests
             const double minMillionRaysPerSec = 0.70;
             const double maxMillionRaysPerSec = 1.15;
 #else
-            const double minMillionRaysPerSec = 1.7;
-            const double maxMillionRaysPerSec = 2.0;
+            // AppVeyor build server
+            const double minMillionRaysPerSec = 5.2;
+            const double maxMillionRaysPerSec = 5.4;
+
+            // my laptop on Power Saver mode
+            //const double minMillionRaysPerSec = 1.7;
+            //const double maxMillionRaysPerSec = 2.0;
 #endif
 
             const int numRays = 1000000;
@@ -169,8 +184,13 @@ namespace Engine3D_Tests
             const double minMillionRaysPerSec = 0.50;
             const double maxMillionRaysPerSec = 0.55;
 #else
-            const double minMillionRaysPerSec = 0.9;
-            const double maxMillionRaysPerSec = 1.2;
+            // AppVeyor build server
+            const double minMillionRaysPerSec = 3.4;
+            const double maxMillionRaysPerSec = 3.6;
+
+            // my laptop on Power Saver mode
+            //const double minMillionRaysPerSec = 0.9;
+            //const double maxMillionRaysPerSec = 1.2;
 #endif
 
             const int numRays = 1000000;

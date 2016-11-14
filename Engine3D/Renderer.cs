@@ -1544,7 +1544,7 @@ namespace Engine3D
                 var instanceKey = string.Format("lightfieldTris_tri{0}_vert{1}", instance.Model.Triangles.Count, instance.Model.Vertices.Count);
                 // TODO: power-of-two size/resolution might make 4D array indexing quicker
                 // TODO: cacheRes of 100 is okay in Silverlight app, but anything over ~64/70 makes the (32-bit) web server run out of memory!!!
-                lightFieldTriMethod = new LightFieldTriMethod(geometry_simple, geometry_subdivided, lightFieldRes, instanceKey, CachePath);
+                lightFieldTriMethod = new LightFieldTriMethod(geometry_simple, geometry_subdivided, lightFieldRes, instanceKey, CachePath, rayTraceRandomSeed);
                 rootGeometry = lightFieldTriMethod;
             }
             lightFieldTriMethod.Enabled = rayTraceLightField && lightFieldHasTris;

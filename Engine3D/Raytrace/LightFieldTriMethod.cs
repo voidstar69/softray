@@ -20,7 +20,7 @@ namespace Engine3D.Raytrace
         private readonly byte resolution;
         private readonly string instanceKey;
         private readonly string cachePath;
-        private readonly Random random = new Random();
+        private readonly Random random;
 
         // 4D light field cache, to cache results from all lighting calculations. This stores a triangle index per cache cell.
         private LightField4D<ushort> lightFieldCache;
@@ -35,7 +35,7 @@ namespace Engine3D.Raytrace
         /// <param name="resolution">The resolution of the 4D lightfield. Lightfield has size 2N x N x 2N x N (yaw covers 360 degrees; pitch covers 180 degrees).
         /// A power-of-two size might make indexing into the 4D array quicker.</param>
         /// <param name="instanceKey">A text value unique to the current 3D model.</param>
-        public LightFieldTriMethod(GeometryCollection triList, SpatialSubdivision subdividedTris, byte resolution, string instanceKey, string cachePath)
+        public LightFieldTriMethod(GeometryCollection triList, SpatialSubdivision subdividedTris, byte resolution, string instanceKey, string cachePath, int randomSeed)
         {
             Contract.Requires(triList != null);
             Contract.Requires(subdividedTris != null);
@@ -46,6 +46,7 @@ namespace Engine3D.Raytrace
             this.resolution = resolution;
             this.instanceKey = instanceKey;
             this.cachePath = cachePath;
+            this.random = new Random(randomSeed);
         }
 
         public void EndRender()
@@ -112,10 +113,11 @@ namespace Engine3D.Raytrace
                 // TODO: once the light field cache 'fills up', do we cease tracing rays? Prove/measure this!
 
                 // Intersect random rays along beam of lightfield cell, against all triangles
-                triIndex = BeamTriangleComplexIntersect(lfCoord);
+                // TODO: this *should* improve quality, but seems to decrease it, and adds a little randomness to the regression tests
+                //triIndex = BeamTriangleComplexIntersect(lfCoord);
 
                 // Intersect central axis of lightfield cell against all triangles
-                //triIndex = BeamTriangleSimpleIntersect(lfCoord);
+                triIndex = BeamTriangleSimpleIntersect(lfCoord);
 
                 if (triIndex == -1)
                 {
@@ -219,7 +221,7 @@ namespace Engine3D.Raytrace
             }
         }
 
-        // Returns index of triangle intersected by central axis of lightfield cell's beam
+        // Returns index of triangle most frequently intersected by random rays along lightfield cell's beam
         // Returns -1 if no triangle is intersected
         private int BeamTriangleComplexIntersect(Coord4D lfCoord)
         {
