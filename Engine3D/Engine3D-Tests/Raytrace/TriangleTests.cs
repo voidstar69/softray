@@ -69,7 +69,7 @@ namespace Engine3D_Tests
 #else
             // AppVeyor build server
             const double minMillionRaysPerSec = 7.9;
-            const double maxMillionRaysPerSec = 8.1;
+            const double maxMillionRaysPerSec = 9.3;
 
             // my laptop on Power Saver mode
             //const double minMillionRaysPerSec = 2.7;
@@ -107,7 +107,7 @@ namespace Engine3D_Tests
 #else
             // AppVeyor build server
             const double minMillionRaysPerSec = 7.9;
-            const double maxMillionRaysPerSec = 8.1;
+            const double maxMillionRaysPerSec = 9.3;
 
             // my laptop on Power Saver mode
             //const double minMillionRaysPerSec = 3.0;
@@ -146,7 +146,7 @@ namespace Engine3D_Tests
             const double maxMillionRaysPerSec = 1.15;
 #else
             // AppVeyor build server
-            const double minMillionRaysPerSec = 5.2;
+            const double minMillionRaysPerSec = 4.8;
             const double maxMillionRaysPerSec = 5.4;
 
             // my laptop on Power Saver mode
@@ -185,7 +185,7 @@ namespace Engine3D_Tests
             const double maxMillionRaysPerSec = 0.55;
 #else
             // AppVeyor build server
-            const double minMillionRaysPerSec = 3.4;
+            const double minMillionRaysPerSec = 3.2;
             const double maxMillionRaysPerSec = 3.6;
 
             // my laptop on Power Saver mode
