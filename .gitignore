@@ -1,2 +1,5 @@
 *.user
 *.suo
+obj
+bin
+candidate images
