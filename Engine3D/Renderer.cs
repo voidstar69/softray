@@ -1,5 +1,5 @@
 ﻿// TODO: cannot display logging text while rendering with multiple threads!
-//#define PARALLEL_RENDER_TPL
+#define PARALLEL_RENDER_TPL
 
 using System;
 using System.Collections.Generic;
