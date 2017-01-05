@@ -3,9 +3,8 @@ cd Engine3D\CodeCoverage
 
 nuget restore packages.config -PackagesDirectory .
 
-cd ..\Engine3D-Tests
-
-dotnet restore
+rem cd ..\Engine3D-Tests
+rem dotnet restore
 
 cd ..
 cd ..
