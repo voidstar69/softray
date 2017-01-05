@@ -2,7 +2,7 @@
 rem Probably not required
 rem cd Engine3D\CodeCoverage
 
-nuget restore packages.config -PackagesDirectory packages
+nuget restore Engine3D\CodeCoverage\packages.config -PackagesDirectory packages
 
 rem Probably not required
 rem cd ..\Engine3D-Tests
