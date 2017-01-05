@@ -1,16 +1,17 @@
 @echo off
-cd Engine3D\CodeCoverage
+rem Probably not required
+rem cd Engine3D\CodeCoverage
 
-nuget restore packages.config -PackagesDirectory .
+nuget restore packages.config -PackagesDirectory packages
 
+rem Probably not required
 rem cd ..\Engine3D-Tests
 rem dotnet restore
-
-cd ..
-cd ..
+rem cd ..
+rem cd ..
 
 rem The -threshold options prevents this taking ages...
-Engine3D\CodeCoverage\OpenCover.4.6.519\tools\OpenCover.Console.exe -target:"C:\Program Files\dotnet\dotnet.exe" -targetargs:"test Engine3D\Engine3D-Tests -c Release -f net451" -threshold:10 -register:user -filter:"+[Engine3D*]*" -excludebyattribute:*.ExcludeFromCodeCoverage* -hideskipped:All -returntargetcode -output:.\Engine3D.Coverage.xml
+.\packages\OpenCover.4.6.519\tools\OpenCover.Console.exe -register:user -target:"C:\Program Files (x86)\Microsoft Visual Studio 12.0\Common7\IDE\MSTest.exe" -targetargs:"/noresults /noisolation /testcontainer:"".\Engine3D\Engine3D-Tests\bin\Release\Engine3D-Tests.dll"" -threshold:10 -filter:"+[Engine3D*]*" -excludebyattribute:*.ExcludeFromCodeCoverage* -hideskipped:All -returntargetcode -output:.\Engine3D.Coverage.xml
 
 if %errorlevel% neq 0 exit /b %errorlevel%
 
