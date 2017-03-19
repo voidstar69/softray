@@ -186,7 +186,7 @@ namespace Engine3D_Tests
 #else
             // AppVeyor build server
             const double minMillionRaysPerSec = 2.9;
-            const double maxMillionRaysPerSec = 3.6;
+            const double maxMillionRaysPerSec = 3.8;
 
             // my laptop on Power Saver mode
             //const double minMillionRaysPerSec = 0.9;
