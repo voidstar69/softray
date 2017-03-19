@@ -95,9 +95,7 @@ namespace Engine3D_Tests
             var millionRaysPerSec = numRays / 1000000.0 / elapsedTime.TotalSeconds;
             Assert.IsTrue(minMillionRaysPerSec < millionRaysPerSec && millionRaysPerSec < maxMillionRaysPerSec,
                 "Rays per second {0:f2} not between {1} and {2} (millions)", millionRaysPerSec, minMillionRaysPerSec, maxMillionRaysPerSec);
-            Console.WriteLine("A test of Console.WriteLine");
-            Console.Out.WriteLine("A test of standard output");
-            Console.Error.WriteLine("A test of standard error");
+            Console.WriteLine("Performance: {0} million rays per second", millionRaysPerSec);
         }
 
         [TestMethod]
@@ -136,6 +134,7 @@ namespace Engine3D_Tests
             var millionRaysPerSec = numRays / 1000000.0 / elapsedTime.TotalSeconds;
             Assert.IsTrue(minMillionRaysPerSec < millionRaysPerSec && millionRaysPerSec < maxMillionRaysPerSec,
                 "Rays per second {0:f2} not between {1} and {2} (millions)", millionRaysPerSec, minMillionRaysPerSec, maxMillionRaysPerSec);
+            Console.WriteLine("Performance: {0} million rays per second", millionRaysPerSec);
         }
 
         [TestMethod]
@@ -177,6 +176,7 @@ namespace Engine3D_Tests
             var millionRaysPerSec = numRays / 1000000.0 / elapsedTime.TotalSeconds;
             Assert.IsTrue(minMillionRaysPerSec < millionRaysPerSec && millionRaysPerSec < maxMillionRaysPerSec,
                 "Rays per second {0:f2} not between {1} and {2} (millions)", millionRaysPerSec, minMillionRaysPerSec, maxMillionRaysPerSec);
+            Console.WriteLine("Performance: {0} million rays per second", millionRaysPerSec);
         }
 
         [TestMethod]
@@ -216,6 +216,7 @@ namespace Engine3D_Tests
             var millionRaysPerSec = numRays / 1000000.0 / elapsedTime.TotalSeconds;
             Assert.IsTrue(minMillionRaysPerSec < millionRaysPerSec && millionRaysPerSec < maxMillionRaysPerSec,
                 "Rays per second {0:f3} not between {1} and {2} (millions)", millionRaysPerSec, minMillionRaysPerSec, maxMillionRaysPerSec);
+            Console.WriteLine("Performance: {0} million rays per second", millionRaysPerSec);
         }
 
         private Vector MakeRandomVector(double sizeX, double sizeY, double sizeZ)

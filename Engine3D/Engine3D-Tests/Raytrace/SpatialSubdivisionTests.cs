@@ -5,8 +5,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Engine3D.Raytrace;
 using Vector = Engine3D.Vector;
 
-// TODO: intersect rays against subdivision trees, and verify ray-node-triangle stats make sense
-
 namespace Engine3D_Tests
 {
     [TestClass]
@@ -185,6 +183,7 @@ namespace Engine3D_Tests
             var millionRayTriPerSec = numRays / 1000000.0 / elapsedTime.TotalSeconds * numTriangles;
             Assert.IsTrue(minMillionRaysPerSec < millionRayTriPerSec && millionRayTriPerSec < maxMillionRaysPerSec,
                 "Rays per second {0:f2} not between {1} and {2} (millions)", millionRayTriPerSec, minMillionRaysPerSec, maxMillionRaysPerSec);
+            Console.WriteLine("Performance: {0} million ray/tri per second", millionRayTriPerSec);
         }
 
         [TestMethod, Ignore]
@@ -206,7 +205,6 @@ namespace Engine3D_Tests
 
             const int numRays = 10000;
             var numRaysHit = 0;
-            DateTime startTime = DateTime.Now;
             for (var i = 0; i < numRays; i++)
             {
                 var start = MakeRandomVector(triangleSpaceSize);
@@ -214,7 +212,6 @@ namespace Engine3D_Tests
                 var info = tree.IntersectRay(start, dir);
                 var infoBase = triSet.IntersectRay(start, dir);
                 Assert.AreEqual(infoBase == null, info == null, "Ray " + i + ": SpatialSubdivision and GeometryCollection differ in intersection status");
-
                 if (info != null)
                 {
                     numRaysHit++;
@@ -266,22 +263,5 @@ namespace Engine3D_Tests
                               (maxY - minY) * random.NextDouble() + minY,
                               (maxZ - minZ) * random.NextDouble() + minZ);
         }
-
-/*
-        public void PexTest(int randomSeed = 12345)
-        {
-            const int maxTreeDepth = 5;
-            const int maxGeometryPerNode = 3;
-            random = new Random(randomSeed);
-            var triangles = MakeRandomTriangles(10);
-            var boundingBox = GetBoundingBoxOfRandomTriangles();
-            var tree = new SpatialSubdivision(triangles, boundingBox, maxTreeDepth, maxGeometryPerNode);
-            Assert.IsNotNull(tree);
-            Assert.AreEqual(4, tree.TreeDepth);
-            Assert.AreEqual(11, tree.NumNodes);
-            Assert.AreEqual(6, tree.NumLeafNodes);
-            Assert.AreEqual(5, tree.NumInternalNodes);
-        }
-*/
     }
 }
