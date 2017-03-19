@@ -299,16 +299,6 @@ namespace Engine3D_Tests
             }
         }
 
-        [TestMethod, Ignore]
-        public void FooTest()
-        {
-            // TODO: currently this overwrites shading.bmp, which is produced by another test
-            modelFileName = "../../obj.3ds";
-            //modelFileName = "../../complex_obj.3ds";
-            //RasteriseTest();
-            RaytraceScenario();
-        }
-        
         // Release mode: 16-23 seconds @ res 400; 1 sec @ res 100
         // Debug mode with contracts: 2 sec @ res 100
         [TestMethod]

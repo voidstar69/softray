@@ -258,7 +258,7 @@ namespace Engine3D.Raytrace
         /// <summary>
         /// Constructor
         /// </summary>
-        /// <param name="geometry">Collection of geometry to subdivide</param>
+        /// <param name="geometry">Collection of geometry to subdivide. Collection will not be modified.</param>
         /// <param name="boundingBox">Bounding box of the geometry collection</param>
         /// <param name="maxTreeDepth">The maximum depth of the constructed tree. This can
         /// result in leaf nodes with more than <paramref name="maxGeometryPerNode"/></param>
@@ -280,12 +280,13 @@ namespace Engine3D.Raytrace
             Node.totalNodes = 0;
             Node.leafNodes = 0;
 
+            // create a modifiable clone of the geometry list, since Node will clear the list
+            var geometryClone = new List<Triangle>(geometry);
+
             // Build a binary tree of axis-aligned splitting planes, with geometry stored only at leaf nodes.
             // As we descend through the tree, we cycle between planes aligned to each axis. Effectively this
             // creates an Octree, although the data structure is a Binary Tree.
-            //ICollection<IRayPlaneIntersectable> geom = new List<IRayPlaneIntersectable>(geometry);
-            //AxisAlignedBox box = new AxisAlignedBox(new Vector(-0.5, -0.5, -0.5), new Vector(0.5, 0.5, 0.5));
-            root = new Node(geometry, boundingBox);
+            root = new Node(geometryClone, boundingBox);
             root.RecursivePlaneSplit(1, maxTreeDepth, maxGeometryPerNode, 2);
 
             // TODO: hacky, and not multi-thread safe. Pass stats from root node to this class?

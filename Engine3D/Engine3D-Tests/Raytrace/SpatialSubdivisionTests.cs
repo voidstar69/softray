@@ -190,19 +190,6 @@ namespace Engine3D_Tests
         [TestMethod, Ignore]
         public void RayIntersectTreeCorrectness()
         {
-#if DEBUG
-            const double minMillionRaysPerSec = 7.0;
-            const double maxMillionRaysPerSec = 8.0;
-#else
-            // AppVeyor build server
-//            const double minMillionRaysPerSec = 28.0;
-//            const double maxMillionRaysPerSec = 30.0;
-
-            // my laptop on Power Saver mode
-            const double minMillionRaysPerSec = 6.7;
-            const double maxMillionRaysPerSec = 8.3;
-#endif
-
             const int numTriangles = 1000;
             SpatialSubdivision tree;
             var triList = BuildRandomTree(numTriangles, maxTreeDepth: 10, maxGeometryPerNode: 5, randomSeed: 12345, tree: out tree);
@@ -231,18 +218,13 @@ namespace Engine3D_Tests
                 if (info != null)
                 {
                     numRaysHit++;
-                    Assert.AreEqual(infoBase.rayFrac, info.rayFrac);
-                    Assert.AreEqual(infoBase.pos, info.pos);
-                    Assert.AreEqual(infoBase.normal, info.normal);
-                    Assert.AreEqual(infoBase.color, info.color);
-                    Assert.AreEqual(infoBase.triIndex, info.triIndex);
+                    Assert.AreEqual(infoBase.triIndex, info.triIndex, "triIndex diff on ray " + i);
+                    Assert.AreEqual(infoBase.rayFrac, info.rayFrac, "rayFrac diff on ray " + i);
+                    Assert.AreEqual(infoBase.pos, info.pos, "pos diff on ray " + i);
+                    Assert.AreEqual(infoBase.normal, info.normal, "normal diff on ray " + i);
+                    Assert.AreEqual(infoBase.color, info.color, "color diff on ray " + i);
                 }
             }
-            var elapsedTime = DateTime.Now - startTime;
-            Assert.IsTrue(numRays * 0.2 < numRaysHit && numRaysHit < numRays * 0.3, "Num rays hit {0} should be 20-30% of total rays {1}", numRaysHit, numRays);
-            var millionRayTriPerSec = numRays / 1000000.0 / elapsedTime.TotalSeconds * numTriangles;
-            Assert.IsTrue(minMillionRaysPerSec < millionRayTriPerSec && millionRayTriPerSec < maxMillionRaysPerSec,
-                "Rays per second {0:f2} not between {1} and {2} (millions)", millionRayTriPerSec, minMillionRaysPerSec, maxMillionRaysPerSec);
         }
 
         private const int triangleSpaceSize = 100;
@@ -259,7 +241,7 @@ namespace Engine3D_Tests
                 var color = (uint)random.Next();
                 triangles.Add(new Triangle(v1, v2, v3, color));
             }
-            return triangles;
+            return triangles.AsReadOnly();
         }
 
         private AxisAlignedBox GetBoundingBoxOfRandomTriangles()
