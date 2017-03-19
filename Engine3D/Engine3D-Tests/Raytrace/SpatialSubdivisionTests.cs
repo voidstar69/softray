@@ -18,7 +18,7 @@ namespace Engine3D_Tests
             Debug.Listeners.Clear();
         }
 
-        [TestMethod, ExpectedException(typeof(NullReferenceException))]
+        [TestMethod, ExpectedException(typeof(ArgumentNullException))]
         public void NullGeometryToConstructor_Error()
         {
             new SpatialSubdivision(null, new AxisAlignedBox(new Vector(0, 0, 0), new Vector(1, 1, 1)));
@@ -136,7 +136,7 @@ namespace Engine3D_Tests
         private ICollection<Triangle> BuildRandomTree(int numTriangles, int maxTreeDepth, int maxGeometryPerNode, int randomSeed, out SpatialSubdivision tree)
         {
             random = new Random(randomSeed);
-            var triangles = MakeRandomTriangles(1000);
+            var triangles = MakeRandomTriangles(numTriangles);
             var boundingBox = GetBoundingBoxOfRandomTriangles();
             tree = new SpatialSubdivision(triangles, boundingBox, maxTreeDepth, maxGeometryPerNode);
             Assert.IsNotNull(tree);
@@ -189,13 +189,13 @@ namespace Engine3D_Tests
         [TestMethod, Ignore]
         public void RayIntersectTreeCorrectness()
         {
-            const int numTriangles = 1000;
+            const int numTriangles = 100;
             SpatialSubdivision tree;
             var triList = BuildRandomTree(numTriangles, maxTreeDepth: 10, maxGeometryPerNode: 5, randomSeed: 12345, tree: out tree);
-            Assert.AreEqual(10, tree.TreeDepth);
-            Assert.AreEqual(915, tree.NumNodes);
-            Assert.AreEqual(458, tree.NumLeafNodes);
-            Assert.AreEqual(457, tree.NumInternalNodes);
+            Assert.AreEqual(8, tree.TreeDepth);
+            Assert.AreEqual(83, tree.NumNodes);
+            Assert.AreEqual(42, tree.NumLeafNodes);
+            Assert.AreEqual(41, tree.NumInternalNodes);
 
             var triSet = new GeometryCollection();
             foreach(var tri in triList)
@@ -203,7 +203,7 @@ namespace Engine3D_Tests
                 triSet.Add(tri);
             }
 
-            const int numRays = 10000;
+            const int numRays = 100000;
             var numRaysHit = 0;
             for (var i = 0; i < numRays; i++)
             {
