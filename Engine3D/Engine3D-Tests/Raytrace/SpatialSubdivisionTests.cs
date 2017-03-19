@@ -135,39 +135,41 @@ namespace Engine3D_Tests
             Assert.AreEqual(457, tree.NumInternalNodes);
         }
 
+        private SpatialSubdivision BuildRandomTree(int numTriangles, int maxTreeDepth, int maxGeometryPerNode, int randomSeed)
+        {
+            random = new Random(randomSeed);
+            var triangles = MakeRandomTriangles(1000);
+            var boundingBox = GetBoundingBoxOfRandomTriangles();
+            var tree = new SpatialSubdivision(triangles, boundingBox, maxTreeDepth, maxGeometryPerNode);
+            Assert.IsNotNull(tree);
+            return tree;
+        }
+
         [TestMethod]
         public void RayIntersectTreePerformance()
         {
 #if DEBUG
-            const double minMillionRaysPerSec = ??;
-            const double maxMillionRaysPerSec = ??;
+            const double minMillionRaysPerSec = 7.0;
+            const double maxMillionRaysPerSec = 8.0;
 #else
             // AppVeyor build server
-            const double minMillionRaysPerSec = 24.0;
-            const double maxMillionRaysPerSec = 27.0;
+            const double minMillionRaysPerSec = 28.0;
+            const double maxMillionRaysPerSec = 30.0;
 
             // my laptop on Power Saver mode
-//            const double minMillionRaysPerSec = 8.1;
-//            const double maxMillionRaysPerSec = 9.2;
+//            const double minMillionRaysPerSec = 6.7;
+//            const double maxMillionRaysPerSec = 8.3;
 #endif
 
-            // TODO: refactor - extract
             const int numTriangles = 1000;
-            const int maxTreeDepth = 10;
-            const int maxGeometryPerNode = 5;
-            random = new Random(12345);
-            var triangles = MakeRandomTriangles(numTriangles);
-            var boundingBox = GetBoundingBoxOfRandomTriangles();
-            var tree = new SpatialSubdivision(triangles, boundingBox, maxTreeDepth, maxGeometryPerNode);
-            Assert.IsNotNull(tree);
+            var tree = BuildRandomTree(numTriangles, maxTreeDepth: 10, maxGeometryPerNode: 5, randomSeed: 12345);
             Assert.AreEqual(10, tree.TreeDepth);
             Assert.AreEqual(915, tree.NumNodes);
             Assert.AreEqual(458, tree.NumLeafNodes);
             Assert.AreEqual(457, tree.NumInternalNodes);
 
-            const int numRays = 100000;
+            const int numRays = 10000;
             var numRaysHit = 0;
-
             DateTime startTime = DateTime.Now;
             for (var i = 0; i < numRays; i++)
             {

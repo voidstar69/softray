@@ -112,7 +112,8 @@ namespace Engine3D_Tests
                 var staticShadows = flags[5];
 
                 // TODO: add flag for quad-filtering on color lightfield
-                RaytraceScenario(shading, focalBlur, shadows, staticShadows, lightField: lfColors, lightFieldWithTris: !lfColors, subPixelRes: subPixelRes);
+                RaytraceScenario(shading: shading, focalBlur: focalBlur, shadows: shadows, staticShadows: staticShadows,
+                    lightField: lfColors, lightFieldWithTris: !lfColors, subPixelRes: subPixelRes);
             }
 
             if (numMissingBaselines > 0)
@@ -230,7 +231,9 @@ namespace Engine3D_Tests
 */
 
         // TODO: add flag for quad-filtering on color lightfield
-        private void RaytraceScenario(bool shading = true, bool focalBlur = false, bool shadows = false, bool staticShadows = false, bool lightField = false, bool lightFieldWithTris = false, int subPixelRes = 1, double pitchDegrees = defaultPitchDegrees, double yawDegrees = defaultYawDegrees, double rollDegrees = defaultRollDegrees)
+        private void RaytraceScenario(bool shading = true, bool focalBlur = false, bool shadows = false, bool staticShadows = false,
+            bool lightField = false, bool lightFieldWithTris = false, int subPixelRes = 1, double pitchDegrees = defaultPitchDegrees,
+            double yawDegrees = defaultYawDegrees, double rollDegrees = defaultRollDegrees, double focalDepth = objectDepth + 0.5)
         {
             using (var renderer = new Renderer())
             {
@@ -241,6 +244,7 @@ namespace Engine3D_Tests
                 renderer.rayTraceSubdivision = true;
                 renderer.rayTraceShading = shading;
                 renderer.rayTraceFocalBlur = focalBlur;
+                renderer.rayTraceFocalDepth = focalDepth;
                 renderer.rayTraceSubPixelRes = subPixelRes;
 
                 renderer.rayTraceShadows = shadows; // TODO: adding this flag seems to increase test runtime massively! (during focal blur?)
