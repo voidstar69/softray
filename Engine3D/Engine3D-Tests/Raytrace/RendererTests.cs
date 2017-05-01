@@ -3,7 +3,11 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Color = Engine3D.Color;
+using GeometryCollection = Engine3D.Raytrace.GeometryCollection;
 using Renderer = Engine3D.Renderer;
+using Sphere = Engine3D.Raytrace.Sphere;
+using Vector = Engine3D.Vector;
 
 namespace Engine3D_Tests
 {
@@ -27,7 +31,7 @@ namespace Engine3D_Tests
         //private readonly ImageFormat bitmapFormat = ImageFormat.Png;
 
         private string modelFileName = "../../obj.3ds";
-        private const double objectDepth = 1.0; // depth of object (in view space)
+        private double objectDepth = 1.0; // depth of object (in view space)
 
         //private const double yawDegrees = 45.0;
         //private const double pitchDegrees = 45.0;
@@ -51,10 +55,11 @@ namespace Engine3D_Tests
         {
         }
 
-        private static void RendererSetup(Renderer renderer, string modelFileName, double pitchDegrees, double yawDegrees, double rollDegrees)
+        private static void RendererSetup(Renderer renderer, string modelFileName, double pitchDegrees, double yawDegrees, double rollDegrees, double objectDepth)
         {
             renderer.BackgroundColor = 0xffff00ff; // pink
             //renderer.BackgroundColor = 0xffff0000; // red
+            //renderer.BackgroundColor = 0xff0000ff; // blue
 
             renderer.SetRenderingSurface(imageWidth, imageHeight, pixels);
 
@@ -112,6 +117,7 @@ namespace Engine3D_Tests
                 var staticShadows = flags[5];
 
                 // TODO: add flag for quad-filtering on color lightfield
+                // TODO: add flag for path tracing?
                 RaytraceScenario(shading: shading, focalBlur: focalBlur, shadows: shadows, staticShadows: staticShadows,
                     lightField: lfColors, lightFieldWithTris: !lfColors, subPixelRes: subPixelRes);
             }
@@ -125,6 +131,7 @@ namespace Engine3D_Tests
         [TestMethod]
         public void RaytraceAntialised()
         {
+            // TODO: compare performance to using Renderer.antiAliasResolution (result should be exactly the same, as long as focal blur not enabled).
             RaytraceScenario(subPixelRes: 2);
             RaytraceScenario(subPixelRes: 4);
             RaytraceScenario(subPixelRes: 8);
@@ -164,6 +171,9 @@ namespace Engine3D_Tests
         public void RaytraceShadowAndFocalBlur()
         {
             RaytraceScenario(focalBlur: true, shadows: true, subPixelRes: 4);
+
+            // TODO: test higher quality focal blur, and different focal depths. Also test it without shadows?
+//            RaytraceScenario(focalBlur: true, shadows: true, subPixelRes: 8, focalDepth: objectDepth + 0.5);
 
             if (numMissingBaselines > 0)
                 Assert.Fail("{0} missing baseline images were recreated", numMissingBaselines);
@@ -232,20 +242,21 @@ namespace Engine3D_Tests
 
         // TODO: add flag for quad-filtering on color lightfield
         private void RaytraceScenario(bool shading = true, bool focalBlur = false, bool shadows = false, bool staticShadows = false,
-            bool lightField = false, bool lightFieldWithTris = false, int subPixelRes = 1, double pitchDegrees = defaultPitchDegrees,
-            double yawDegrees = defaultYawDegrees, double rollDegrees = defaultRollDegrees, double focalDepth = objectDepth + 0.5)
+            bool lightField = false, bool lightFieldWithTris = false, bool pathTracing = false, int subPixelRes = 1, double pitchDegrees = defaultPitchDegrees,
+            double yawDegrees = defaultYawDegrees, double rollDegrees = defaultRollDegrees, double focalDepth = -1, GeometryCollection extraGeometry = null)
         {
             using (var renderer = new Renderer())
             {
-                RendererSetup(renderer, modelFileName, pitchDegrees, yawDegrees, rollDegrees);
+                RendererSetup(renderer, modelFileName, pitchDegrees, yawDegrees, rollDegrees, objectDepth);
 
                 // TODO: raytracer has slight difference on cube edges between Release and Debug mode. Rounding error?
                 renderer.rayTrace = true;
                 renderer.rayTraceSubdivision = true;
                 renderer.rayTraceShading = shading;
                 renderer.rayTraceFocalBlur = focalBlur;
-                renderer.rayTraceFocalDepth = focalDepth;
+                renderer.rayTraceFocalDepth = (Math.Abs(focalDepth + 1) < 0.001 ? objectDepth + 0.5 : focalDepth);
                 renderer.rayTraceSubPixelRes = subPixelRes;
+                renderer.rayTracePathTracing = pathTracing;
 
                 renderer.rayTraceShadows = shadows; // TODO: adding this flag seems to increase test runtime massively! (during focal blur?)
                 renderer.rayTraceShadowsStatic = staticShadows;
@@ -262,18 +273,24 @@ namespace Engine3D_Tests
                 renderer.rayTraceLightField = lightField;
                 renderer.LightFieldStoresTriangles = lightFieldWithTris;
 
+                // raytrace any extra geometry beyond the triangle model?
+                if (extraGeometry != null)
+                    renderer.ExtraGeometryToRaytrace = extraGeometry;
+
                 // when shadows are disabled, static shadows flag has no effect
                 if (renderer.rayTraceShadowsStatic && !renderer.rayTraceShadows)
                     return;
 
                 var dirPath = "raytrace/" + imageWidth + 'x' + imageHeight;
                 var testName = dirPath + '/' +
+                    (renderer.rayTracePathTracing ? "pathTracing_" : "") +
                     (renderer.rayTraceShading ? "shading" : "noShading") +
                     (renderer.rayTraceShadows ? (renderer.rayTraceShadowsStatic ? "_staticShadows" : "_shadows") : "") +
                     (renderer.rayTraceAmbientOcclusion ? "_AO" : "") +
                     (lightField && lightFieldWithTris ? "_lightFieldTri" : "") + (lightField && !lightFieldWithTris ? "_lightFieldColor" : "") +
                     (renderer.rayTraceFocalBlur ? "_focalBlur" : "") +
-                    (focalBlur ? "x" + subPixelRes : (subPixelRes > 1 ? "_" + subPixelRes + "xAA" : ""));
+                    (focalBlur ? "x" + subPixelRes : (subPixelRes > 1 ? "_" + subPixelRes + "xAA" : "")) +
+                    (extraGeometry != null ? ("_" + (extraGeometry.Count + 1) + "_geometry") : "");
 
 /*
                 // skip all tests up until a specific test, then run it and all the rest
@@ -299,6 +316,41 @@ namespace Engine3D_Tests
             }
         }
 
+        [TestMethod]
+        public void PathTracePrimitivesTest()
+        {
+            var geometryList = new GeometryCollection();
+            //geometryList.Add(new Plane(new Vector(0, -0.5, 0), new Vector(0, 1, 0)) { Color = Color.White });
+            geometryList.Add(new Sphere(new Vector(0, -10000, 0), 9999.5) { Color = Color.White });
+            geometryList.Add(new Sphere(new Vector(-0.5, 0, -0.5), 0.5) { Color = Color.Red });
+            geometryList.Add(new Sphere(new Vector(+0.5, 0, +0.5), 0.5) { Color = Color.Green });
+            geometryList.Add(new Sphere(new Vector(+0.5, 0, -0.5), 0.5) { Color = Color.Blue });
+            geometryList.Add(new Sphere(new Vector(-0.5, 0, +0.5), 0.5) { Color = Color.Yellow });
+
+            objectDepth = 3.0;
+            double depthOfFocus = objectDepth - 0.5;
+            RaytraceScenario(pathTracing: true, shading: false, extraGeometry: geometryList);
+            // TODO: in this render, the triangle geometry ends up added twice!
+            RaytraceScenario(pathTracing: true, shading: false, extraGeometry: geometryList, focalBlur: true, focalDepth: depthOfFocus, subPixelRes: 4);
+            // TODO: in this render, the triangle geometry ends up added 3x!
+            RaytraceScenario(pathTracing: true, shading: false, extraGeometry: geometryList, focalBlur: true, focalDepth: depthOfFocus, subPixelRes: 8);
+        }
+
+        [TestMethod]
+        public void PathTraceTrianglesTest()
+        {
+            double depthOfFocus = objectDepth;
+            modelFileName = "../../obj2.3ds";
+
+            RaytraceScenario(pathTracing: true, shading: false);
+            RaytraceScenario(pathTracing: true, shading: false, subPixelRes: 2);
+            RaytraceScenario(pathTracing: true, shading: false, subPixelRes: 4);
+            RaytraceScenario(pathTracing: true, shading: false, subPixelRes: 8);
+            RaytraceScenario(pathTracing: true, shading: false, focalBlur: true, focalDepth: depthOfFocus, subPixelRes: 2);
+            RaytraceScenario(pathTracing: true, shading: false, focalBlur: true, focalDepth: depthOfFocus, subPixelRes: 4);
+            RaytraceScenario(pathTracing: true, shading: false, focalBlur: true, focalDepth: depthOfFocus, subPixelRes: 8);
+        }
+        
         // Release mode: 16-23 seconds @ res 400; 1 sec @ res 100
         // Debug mode with contracts: 2 sec @ res 100
         [TestMethod]
@@ -306,7 +358,7 @@ namespace Engine3D_Tests
         {
             using (var renderer = new Renderer())
             {
-                RendererSetup(renderer, modelFileName, defaultPitchDegrees, defaultYawDegrees, defaultRollDegrees);
+                RendererSetup(renderer, modelFileName, defaultPitchDegrees, defaultYawDegrees, defaultRollDegrees, objectDepth);
                 renderer.rayTrace = false;
 
                 var flags = new bool[5];

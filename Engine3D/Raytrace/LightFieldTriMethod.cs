@@ -15,14 +15,18 @@ namespace Engine3D.Raytrace
     /// </summary>
     public class LightFieldTriMethod : IRayIntersectable, IDisposable
     {
-        private readonly GeometryCollection geometry_simple;
-        private readonly SpatialSubdivision geometry_subdivided;
+        // Three different representations of the same geometry
+        private readonly IRayIntersectable geometry;                // abstract interface to collection of triangles
+        private readonly GeometryCollection geometry_simple;        // collection of triangles
+        private readonly SpatialSubdivision geometry_subdivided;    // spatial subdivision of collection of triangles
+
         private readonly byte resolution;
         private readonly string instanceKey;
         private readonly string cachePath;
         private readonly Random random;
 
         // 4D light field cache, to cache results from all lighting calculations. This stores a triangle index per cache cell.
+        // TODO: should this use locking like LightFieldColorMethod?
         private LightField4D<ushort> lightFieldCache;
 
         public bool Enabled { get; set; }
@@ -30,19 +34,22 @@ namespace Engine3D.Raytrace
         /// <summary>
         /// Create structure to generate and store 4D lightfield data for a single 3D model (that fits within the unit cube).
         /// </summary>
-        /// <param name="triList"></param>
-        /// <param name="subdividedTris"></param>
+        /// <param name="geometry">abstract interface to collection of triangles</param>
+        /// <param name="triList">collection of triangles</param>
+        /// <param name="subdividedTris">spatial subdivision of collection of triangles</param>
         /// <param name="resolution">The resolution of the 4D lightfield. Lightfield has size 2N x N x 2N x N (yaw covers 360 degrees; pitch covers 180 degrees).
         /// A power-of-two size might make indexing into the 4D array quicker.</param>
         /// <param name="instanceKey">A text value unique to the current 3D model.</param>
-        public LightFieldTriMethod(GeometryCollection triList, SpatialSubdivision subdividedTris, byte resolution, string instanceKey, string cachePath, int randomSeed)
+        public LightFieldTriMethod(IRayIntersectable geometry, GeometryCollection triList, SpatialSubdivision subdividedTris,
+            byte resolution, string instanceKey, string cachePath, int randomSeed)
         {
             Contract.Requires(triList != null);
             Contract.Requires(subdividedTris != null);
             Contract.Requires(resolution > 0);
             Enabled = true;
-            geometry_simple = triList;
-            geometry_subdivided = subdividedTris;
+            this.geometry = geometry;
+            this.geometry_simple = triList;
+            this.geometry_subdivided = subdividedTris;
             this.resolution = resolution;
             this.instanceKey = instanceKey;
             this.cachePath = cachePath;
@@ -52,6 +59,7 @@ namespace Engine3D.Raytrace
         public void EndRender()
         {
             // Free up any virtual memory used by any memory-mapped files
+            // TODO: should this use locking like LightFieldColorMethod?
             if (lightFieldCache != null)
                 lightFieldCache.FreeVirtualMemory();
         }
@@ -75,7 +83,7 @@ namespace Engine3D.Raytrace
         {
             // if lightfield is disabled, pass-through the ray intersection
             if (!Enabled)
-                return geometry_subdivided.IntersectRay(start, dir);
+                return geometry.IntersectRay(start, dir);
 
             // lazily create the lightfield cache
             if (lightFieldCache == null)

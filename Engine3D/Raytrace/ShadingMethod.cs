@@ -63,7 +63,7 @@ namespace Engine3D.Raytrace
 
             //color = Surface.ColorFromArgb(0, intensityByte, intensityByte, intensityByte);
 
-            info.color = Modulate(info.color, lightIntensityByte);
+            info.color = Color.ModulatePackedColor(info.color, lightIntensityByte);
             return info;
         }
 
@@ -174,18 +174,6 @@ namespace Engine3D.Raytrace
             Assert.IsTrue(color.b >= 0.0 && color.b <= 1.0, "color.b out of range: {0}", color.b);
 
             return color;
-        }
-
-        private uint Modulate(uint color, byte amount)
-        {
-            byte r = (byte)(color >> 16);
-            byte g = (byte)(color >> 8);
-            byte b = (byte)color;
-            r = (byte)((r * amount) >> 8);
-            g = (byte)((g * amount) >> 8);
-            b = (byte)((b * amount) >> 8);
-            return (uint)((r << 16) + (g << 8) + b);
-            //            return (uint)(((ulong)color * amount) >> 8);
         }
     }
 }

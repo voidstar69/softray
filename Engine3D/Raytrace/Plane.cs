@@ -25,6 +25,13 @@ namespace Engine3D.Raytrace
             _normal = normal;
             _normal.Normalise();
             _originDist = point.DotProduct(_normal);
+            Color = Color.White;
+        }
+
+        private uint color;
+        public Color Color
+        {
+            set { color = value.ToARGB(); }
         }
 
         /// <summary>
@@ -80,7 +87,7 @@ namespace Engine3D.Raytrace
                 info.normal = _normal;
                 info.rayFrac = rayFrac;
 
-                info.color = 0x00ffffff;
+                info.color = color;
 
                 // TODO: better parameterisation of the surface
 //                info.u = info.pos.x;

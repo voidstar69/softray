@@ -117,6 +117,7 @@
     <Compile Include="Raytrace\LightFieldTriMethod.cs" />
     <Compile Include="Raytrace\LineWalker3D.cs" />
     <Compile Include="Raytrace\MemMappedArray.cs" />
+    <Compile Include="Raytrace\PathTracingMethod.cs" />
     <Compile Include="Raytrace\Plane.cs" />
     <Compile Include="Raytrace\Point.cs" />
     <Compile Include="Raytrace\ShadingMethod.cs" />

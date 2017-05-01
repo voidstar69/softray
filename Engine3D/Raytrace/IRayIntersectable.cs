@@ -45,6 +45,7 @@ namespace Engine3D.Raytrace
             Contract.Ensures(Contract.Result<IntersectionInfo>() == null || Contract.Result<IntersectionInfo>().normal.IsUnitVector);
             Contract.Ensures(Contract.Result<IntersectionInfo>() == null || Contract.Result<IntersectionInfo>().rayFrac >= 0);
             Contract.Ensures(Contract.Result<IntersectionInfo>() == null || Contract.Result<IntersectionInfo>().triIndex >= -1);
+            Contract.Ensures(Contract.Result<IntersectionInfo>() == null || (Contract.Result<IntersectionInfo>().color & 0xff000000) == 0xff000000); // no transparency allowed
             //Contract.Ensures(Contract.Result<IntersectionInfo>() == null || Contract.Result<IntersectionInfo>().objHit != null);
             return default(IntersectionInfo);
         }

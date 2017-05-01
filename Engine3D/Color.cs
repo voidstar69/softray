@@ -119,5 +119,20 @@ namespace Engine3D
         {
             return string.Format("{0},{1},{2}", r, g, b);
         }
+
+        // TODO: nothing to do with the Color class. Where to store this code?
+        public static uint ModulatePackedColor(uint color, byte amount)
+        {
+            byte r = (byte)(color >> 16);
+            byte g = (byte)(color >> 8);
+            byte b = (byte)color;
+            r = (byte)((r * amount) >> 8);
+            g = (byte)((g * amount) >> 8);
+            b = (byte)((b * amount) >> 8);
+            return (uint)((255u << 24) + (r << 16) + (g << 8) + b);
+
+            // TODO: possibly more efficient alternative. Can this ever work?
+            //return (uint)(((ulong)color * amount) >> 8);
+        }
     }
 }

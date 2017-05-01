@@ -25,6 +25,7 @@ namespace Engine3D.Raytrace
             Contract.Requires(radius > 0);
             this.center = center;
             this.radius = radius;
+            this.Color = Color.White;
         }
 
         // TODO: turn this into a struct for performance?
@@ -41,6 +42,12 @@ namespace Engine3D.Raytrace
                 this.horizAngle = horizAngle;
                 this.vertAngle = vertAngle;
             }
+        }
+
+        private uint color;
+        public Color Color
+        {
+            set { color = value.ToARGB(); }
         }
 
         [Pure]
@@ -171,7 +178,7 @@ namespace Engine3D.Raytrace
             info.pos = start + dir * rayFrac;
             info.normal = info.pos - center;
             info.normal.Normalise();
-            info.color = 0x00ffffff;
+            info.color = color;
 
             // TODO: this is for debugging spherical angles!
 /*

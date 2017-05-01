@@ -74,11 +74,12 @@ namespace Engine3D
         public bool rayTraceAmbientOcclusion = false; // TODO: add flag for dynamic ambient occlusion, i.e. without using AO cache?
         public bool rayTraceLightField = false;
         public bool rayTraceSubdivision = true;
+        public bool rayTracePathTracing = false;
         public bool rayTraceFocalBlur = true;   // TODO: focal blur only works if rayTraceSubPixelRes > 1. Give focal blur an indepedant sub-resolution.
         public double rayTraceFocalDepth = 1.5; // the depth from the camera at which surfaces are exactly in focus
         public double rayTraceFocalBlurStrength = 10.0;
         public int rayTraceConcurrency = 4; // TODO: a higher number of threads results in more imperceptible noise in the image
-        public int rayTraceSubPixelRes = 1;
+        public int rayTraceSubPixelRes = 1; // sub-pixel raytracing resolution (NxN samples per pixel). Used for anti-aliasing (equivalent to antiAliasResolution) or focal blur (but these are mutally exclusive).
 
         public int rayTraceRandomSeed = 1234567890;
 
@@ -104,6 +105,9 @@ namespace Engine3D
 
         // Technique for shading surfaces (during raytracing)
         private ShadingMethod shadingMethod;
+
+        // Technique for tracing rays and shading surfaces (an alternative to vanilla raytracing)
+        private PathTracingMethod pathTracingMethod;
 
         // Technique for casting soft shadows (during raytracing)
         private const int staticShadowRes = 128;
@@ -209,6 +213,7 @@ namespace Engine3D
             specularLight_shininess = 100.0;
 
             Instances = new List<Instance>();
+            ExtraGeometryToRaytrace = new GeometryCollection();
 
             width = 1;
             height = 1;
@@ -300,7 +305,7 @@ namespace Engine3D
             }
             set
             {
-                // Mask out Alpha/Depth component of background color
+                // Mask out Alpha/Depth component of background color (rasteriser sometimes stores 8-bit depth in Alpha component!)
                 // TODO: final image is fully transparent when saved as a PNG file!
                 backgroundColor = value & 0x00FFFFFF;
             }
@@ -432,6 +437,8 @@ namespace Engine3D
             }
         }
         private bool cacheStaticShadowsToFile = true;
+
+        public GeometryCollection ExtraGeometryToRaytrace { get; set; }
 
         /// <summary>
         /// The number of rays fired during the last rendering.
@@ -733,10 +740,8 @@ namespace Engine3D
                 }
             }
 
-
             // TODO
             //LineWalker3D.TestLineWalking(surface);
-
 
             PostProcessImage();
 
@@ -909,6 +914,7 @@ namespace Engine3D
             }
         }
 
+        // Down-sample rendering surface into a smaller anti-aliased surface. Source pixels are averaged together.
         private void AntiAliasImage()
         {
             if(antiAliasResolution < 2)
@@ -1435,7 +1441,7 @@ namespace Engine3D
                 Vector v2 = model.Vertices[tri.vertexIndex2].pos;
                 Vector v3 = model.Vertices[tri.vertexIndex3].pos;
                 // TODO: store material ambient and specular into raytracer triangle
-                uint color = Surface.PackColorAndAlpha(tri.diffuseMaterial, 0);
+                uint color = Surface.PackColorAndAlpha(tri.diffuseMaterial, 1.0);
                 // let the triangle know its index within this collection of geometry
                 geom.Add(new Raytrace.Triangle(v1, v2, v3, color) { TriangleIndex = triIndex });
                 triIndex++;
@@ -1513,6 +1519,12 @@ namespace Engine3D
                     rootGeometry = geometry_simple;
                 }
 
+                if(ExtraGeometryToRaytrace.Count > 0)
+                {
+                    ExtraGeometryToRaytrace.Add(rootGeometry);
+                    rootGeometry = ExtraGeometryToRaytrace;
+                }
+
 /*
                 // TODO: this plane is ignored because it cannot be passed to the lightFieldTriMethod!
                 // TODO: quick hack to add a ground plane to show off shadows. May break later assumptions about what geometry is set to!
@@ -1530,9 +1542,6 @@ namespace Engine3D
 */
             }
 
-            // TODO: quickly test the sphere primitive alone
-            //geometry = new Sphere(new Vector(0, 0, 0), 0.5);
-
             if (lightFieldTriMethod == null)
             {
                 // Ensure that we have a list of triangles to index into, and that every triangle has an index assigned
@@ -1544,7 +1553,7 @@ namespace Engine3D
                 var instanceKey = string.Format("lightfieldTris_tri{0}_vert{1}", instance.Model.Triangles.Count, instance.Model.Vertices.Count);
                 // TODO: power-of-two size/resolution might make 4D array indexing quicker
                 // TODO: cacheRes of 100 is okay in Silverlight app, but anything over ~64/70 makes the (32-bit) web server run out of memory!!!
-                lightFieldTriMethod = new LightFieldTriMethod(geometry_simple, geometry_subdivided, lightFieldRes, instanceKey, CachePath, rayTraceRandomSeed);
+                lightFieldTriMethod = new LightFieldTriMethod(rootGeometry, geometry_simple, geometry_subdivided, lightFieldRes, instanceKey, CachePath, rayTraceRandomSeed);
                 rootGeometry = lightFieldTriMethod;
             }
             lightFieldTriMethod.Enabled = rayTraceLightField && lightFieldHasTris;
@@ -1555,6 +1564,13 @@ namespace Engine3D
                 rootGeometry = shadingMethod;
             }
             shadingMethod.Enabled = rayTraceShading;
+
+            if (pathTracingMethod == null)
+            {
+                pathTracingMethod = new PathTracingMethod(rootGeometry, scene, instance, rayTraceRandomSeed);
+                rootGeometry = pathTracingMethod;
+            }
+            pathTracingMethod.Enabled = rayTracePathTracing;
 
             if (shadowMethod == null)
             {
@@ -1822,8 +1838,8 @@ namespace Engine3D
             IntersectionInfo info = TraceRaySimple(geometry, ref rayStart, ref rayDir);
             if (info == null)
             {
-                // ray did not hit the scene
-                return backgroundColor;
+                // ray did not hit the scene - return background color
+                return backgroundColor | 0xFF000000; // force background colour to be fully opaque
             }
 
             // by this point, our ray definitely intersected some geometry
@@ -1890,18 +1906,6 @@ namespace Engine3D
                 Interlocked.Add(ref totalLeafNodesVisits, geometry_subdivided.NumLeafNodesVisited);
             }
             return info;
-        }
-
-        private uint Modulate(uint color, byte amount)
-        {
-            byte r = (byte)(color >> 16);
-            byte g = (byte)(color >> 8);
-            byte b = (byte)color;
-            r = (byte)((r * amount) >> 8);
-            g = (byte)((g * amount) >> 8);
-            b = (byte)((b * amount) >> 8);
-            return (uint)((r << 16) + (g << 8) + b);
-            //            return (uint)(((ulong)color * amount) >> 8);
         }
 
 /*

@@ -1,4 +1,6 @@
-﻿namespace Engine3D.Raytrace
+﻿using System.Diagnostics.Contracts;
+
+namespace Engine3D.Raytrace
 {
     public class Triangle : IRayPlaneIntersectable
     {
@@ -24,6 +26,8 @@
         /// <param name="color">The color of the triangle.</param>
         public Triangle(Vector v1, Vector v2, Vector v3, uint color)
         {
+            Contract.Requires((color & 0xff000000) == 0xff000000); // no transparency allowed
+
             vertex1 = new Point(v1);
             vertex2 = new Point(v2);
             vertex3 = new Point(v3);

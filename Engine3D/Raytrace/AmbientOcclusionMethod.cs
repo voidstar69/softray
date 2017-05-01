@@ -94,7 +94,7 @@ namespace Engine3D.Raytrace
 
             // shade surface point based on nearby geometry blocking ambient light from reaching surface
             var lightIntensityByte = ambientOcclusionCache.CacheAmbientOcclusion(info, geometry);
-            info.color = Modulate(info.color, lightIntensityByte);
+            info.color = Color.ModulatePackedColor(info.color, lightIntensityByte);
             return info;
         }
 
@@ -109,18 +109,6 @@ namespace Engine3D.Raytrace
             {
                 return geometry.NumRayTests;
             }
-        }
-
-        private uint Modulate(uint color, byte amount)
-        {
-            byte r = (byte)(color >> 16);
-            byte g = (byte)(color >> 8);
-            byte b = (byte)color;
-            r = (byte)((r * amount) >> 8);
-            g = (byte)((g * amount) >> 8);
-            b = (byte)((b * amount) >> 8);
-            return (uint)((r << 16) + (g << 8) + b);
-            //            return (uint)(((ulong)color * amount) >> 8);
         }
     }
 }
