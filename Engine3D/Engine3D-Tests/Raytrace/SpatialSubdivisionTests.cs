@@ -151,12 +151,12 @@ namespace Engine3D_Tests
             const double maxMillionRaysPerSec = 8.0;
 #else
             // AppVeyor build server
-//            const double minMillionRaysPerSec = 25.5;
-//            const double maxMillionRaysPerSec = 28.0;
+            const double minMillionRaysPerSec = 25.5;
+            const double maxMillionRaysPerSec = 28.0;
 
             // my laptop on Power Saver mode
-            const double minMillionRaysPerSec = 6.7;
-            const double maxMillionRaysPerSec = 8.3;
+//            const double minMillionRaysPerSec = 6.7;
+//            const double maxMillionRaysPerSec = 8.3;
 #endif
 
             const int numTriangles = 1000;
