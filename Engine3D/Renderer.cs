@@ -297,6 +297,10 @@ namespace Engine3D
         // Background color (0xAARRGGBB = Alpha, Red, Green, Blue. Alpha will be ignored).
         // Note that setting this to non-zero slows down the rendering slightly.
         private uint backgroundColor = 0x00000000;
+
+        /// <summary>
+        /// Get or set the background colour (without alpha component)
+        /// </summary>
         public uint BackgroundColor
         {
             get
@@ -308,6 +312,17 @@ namespace Engine3D
                 // Mask out Alpha/Depth component of background color (rasteriser sometimes stores 8-bit depth in Alpha component!)
                 // TODO: final image is fully transparent when saved as a PNG file!
                 backgroundColor = value & 0x00FFFFFF;
+            }
+        }
+
+        /// <summary>
+        /// Get the background colour (including fully opaque alpha component)
+        /// </summary>
+        public uint BackgroundColorWithAlpha
+        {
+            get
+            {
+                return backgroundColor | 0xFF000000;
             }
         }
 
@@ -686,13 +701,13 @@ namespace Engine3D
             // Need to clear color and depth buffers?
             if (!rayTrace)
             {
-                if (backgroundColor == 0x00000000)
+                if (BackgroundColor == 0x00000000)
                 {
                     surface.Clear(); // faster, but background is transparent!
                 }
                 else
                 {
-                    surface.Clear(backgroundColor); // background is opaque, but slower
+                    surface.Clear(BackgroundColor); // background is opaque, but slower
                     //surface.Clear(0xFF000000); // background is opaque, but slower and breaks the depth buffer!
                 }
 
@@ -811,7 +826,7 @@ namespace Engine3D
                     break;
 
                 case Style.Negative:
-                    surface.ApplyColorFunc(x => (x == backgroundColor ? backgroundColor : 0x00ffffff - x));
+                    surface.ApplyColorFunc(x => (x == BackgroundColor ? BackgroundColor : 0x00ffffff - x));
                     break;
 
                 case Style.DepthSmooth:
@@ -1598,7 +1613,7 @@ namespace Engine3D
                 var instanceKey = string.Format("lightfieldColors_tri{0}_vert{1}", instance.Model.Triangles.Count, instance.Model.Vertices.Count);
                 // TODO: power-of-two size/resolution might make 4D array indexing quicker
                 // TODO: cacheRes of 100 is okay in Silverlight app, but anything over ~64/70 makes the (32-bit) web server run out of memory!!!
-                lightFieldColorMethod = new LightFieldColorMethod(rootGeometry, lightFieldRes, instanceKey, backgroundColor, CachePath);
+                lightFieldColorMethod = new LightFieldColorMethod(rootGeometry, lightFieldRes, instanceKey, BackgroundColorWithAlpha, CachePath);
                 rootGeometry = lightFieldColorMethod;
             }
             lightFieldColorMethod.Enabled = rayTraceLightField && !lightFieldHasTris;
@@ -1840,7 +1855,7 @@ namespace Engine3D
             if (info == null)
             {
                 // ray did not hit the scene - return background color
-                return backgroundColor | 0xFF000000; // force background colour to be fully opaque
+                return BackgroundColorWithAlpha; // force background colour to be fully opaque
             }
 
             // by this point, our ray definitely intersected some geometry

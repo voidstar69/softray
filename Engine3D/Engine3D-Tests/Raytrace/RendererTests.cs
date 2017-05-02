@@ -57,9 +57,9 @@ namespace Engine3D_Tests
 
         private static void RendererSetup(Renderer renderer, string modelFileName, double pitchDegrees, double yawDegrees, double rollDegrees, double objectDepth)
         {
-            renderer.BackgroundColor = 0xffff00ff; // pink
-            //renderer.BackgroundColor = 0xffff0000; // red
-            //renderer.BackgroundColor = 0xff0000ff; // blue
+            renderer.BackgroundColor = 0xff00ff; // pink
+            //renderer.BackgroundColor = 0xff0000; // red
+            //renderer.BackgroundColor = 0x0000ff; // blue
 
             renderer.SetRenderingSurface(imageWidth, imageHeight, pixels);
 
