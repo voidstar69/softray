@@ -13,7 +13,7 @@ namespace Engine3D.Raytrace
         private readonly IRayIntersectable geometry;
 
         // Random number generator used for picking new ray directions
-        private readonly Random random;
+//        private readonly Random random;
 
         public bool Enabled { get; set; }
 
@@ -21,7 +21,10 @@ namespace Engine3D.Raytrace
         {
             Enabled = true;
             this.geometry = geometry;
-            random = new Random(randomSeed);
+
+            // This single Random object is reused by multiple threads leading to non-deterministic rendering output.
+            // TODO: somehow pass in a thread-local Random object. Add some sort of context object to IntersectRay?
+//            random = new Random(randomSeed);
         }
 
         /// <summary>
@@ -30,12 +33,12 @@ namespace Engine3D.Raytrace
         /// <param name="start">The start position of the ray, in object space.</param>
         /// <param name="dir">The direction of the ray, in object space (not a unit vector).</param>
         /// <returns>Information about the nearest intersection, or null if no intersection.</returns>
-        public IntersectionInfo IntersectRay(Vector start, Vector dir)
+        public IntersectionInfo IntersectRay(Vector start, Vector dir, RenderContext context)
         {
             Contract.Ensures(Contract.Result<IntersectionInfo>() == null || (Contract.Result<IntersectionInfo>().color & 0xff000000) == 0xff000000);
 
             // trace ray through underlying geometry
-            IntersectionInfo info = geometry.IntersectRay(start, dir);
+            IntersectionInfo info = geometry.IntersectRay(start, dir, context);
 
             // if we are disabled, pass-through the ray intersection
             if (!Enabled)
@@ -48,11 +51,11 @@ namespace Engine3D.Raytrace
             // shade the surface point
             Vector surfaceNormal = info.normal;
             Vector newRayStart = info.pos + surfaceNormal * raySurfaceOffset;
-            Vector newRayDir = RandomRayInHemisphere(surfaceNormal, random);
+            Vector newRayDir = RandomRayInHemisphere(surfaceNormal, context.RNG);
             newRayDir.Normalise(); // only needed for calling BRDF function
 
             // Fire off ray to check for another surface in the chosen direction
-            Raytrace.IntersectionInfo newRayInfo = geometry.IntersectRay(newRayStart, newRayDir);
+            Raytrace.IntersectionInfo newRayInfo = geometry.IntersectRay(newRayStart, newRayDir, context);
             // Did this ray did hit another surface?
             Color incomingLight = Color.Black; // TODO: use background color from Renderer
             if (newRayInfo != null)

@@ -17,6 +17,16 @@ namespace Engine3D.Raytrace
         public int triIndex = -1;   // -1 means that the intersected geometry is not a triangle
     }
 
+    public class RenderContext
+    {
+        public RenderContext(System.Random randomNumberGenerator)
+        {
+            RNG = randomNumberGenerator;
+        }
+
+        public System.Random RNG { get; private set; }
+    }
+
     [ContractClass(typeof(ContractForIRayIntersectable))]
     public interface IRayIntersectable
     {
@@ -27,7 +37,7 @@ namespace Engine3D.Raytrace
         /// <param name="dir">The direction of the ray, in object space (not a unit vector).</param>
         /// <returns>Information about the nearest intersection, or null if no intersection.</returns>
         /// <remarks>Must be thread safe.</remarks>
-        IntersectionInfo IntersectRay(Vector start, Vector dir);
+        IntersectionInfo IntersectRay(Vector start, Vector dir, RenderContext context);
 
         /// <summary>
         /// The number of basic ray tests performed during the last call to IntersectRay.
@@ -40,7 +50,7 @@ namespace Engine3D.Raytrace
     [ContractClassFor(typeof(IRayIntersectable))]
     public abstract class ContractForIRayIntersectable : IRayIntersectable
     {
-        public IntersectionInfo IntersectRay(Vector start, Vector dir)
+        public IntersectionInfo IntersectRay(Vector start, Vector dir, RenderContext context)
         {
             Contract.Ensures(Contract.Result<IntersectionInfo>() == null || Contract.Result<IntersectionInfo>().normal.IsUnitVector);
             Contract.Ensures(Contract.Result<IntersectionInfo>() == null || Contract.Result<IntersectionInfo>().rayFrac >= 0);

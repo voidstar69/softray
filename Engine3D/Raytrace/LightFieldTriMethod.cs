@@ -79,11 +79,11 @@ namespace Engine3D.Raytrace
         /// <param name="start">The start position of the ray, in object space.</param>
         /// <param name="dir">The direction of the ray, in object space (not a unit vector).</param>
         /// <returns>Information about the nearest intersection, or null if no intersection.</returns>
-        public IntersectionInfo IntersectRay(Vector start, Vector dir)
+        public IntersectionInfo IntersectRay(Vector start, Vector dir, RenderContext context)
         {
             // if lightfield is disabled, pass-through the ray intersection
             if (!Enabled)
-                return geometry.IntersectRay(start, dir);
+                return geometry.IntersectRay(start, dir, context);
 
             // lazily create the lightfield cache
             if (lightFieldCache == null)
@@ -122,10 +122,10 @@ namespace Engine3D.Raytrace
 
                 // Intersect random rays along beam of lightfield cell, against all triangles
                 // TODO: this *should* improve quality, but seems to decrease it, and adds a little randomness to the regression tests
-                //triIndex = BeamTriangleComplexIntersect(lfCoord);
+                //triIndex = BeamTriangleComplexIntersect(lfCoord, context);
 
                 // Intersect central axis of lightfield cell against all triangles
-                triIndex = BeamTriangleSimpleIntersect(lfCoord);
+                triIndex = BeamTriangleSimpleIntersect(lfCoord, context);
 
                 if (triIndex == -1)
                 {
@@ -154,7 +154,7 @@ namespace Engine3D.Raytrace
             triIndex = (int)lfCacheEntry - 2; // discount empty and replacement cache values
             Contract.Assert(triIndex >= 0);
             var tri = geometry_simple[triIndex] as Raytrace.Triangle;
-            IntersectionInfo intersection = tri.IntersectRay(rayStart, rayDir); // intersect ray against triangle
+            IntersectionInfo intersection = tri.IntersectRay(rayStart, rayDir, context); // intersect ray against triangle
 
             // intersect ray against plane of triangle, to avoid holes by covering full extent of lightfield cell. Creates spatial tearing around triangle silhouettes.
             //info = tri.Plane.IntersectRay(rayStart, rayDir);
@@ -165,7 +165,7 @@ namespace Engine3D.Raytrace
                 // Intersect ray against triangles 'near' to the triangle from the lightfield (i.e. in the same subdivision node).
                 // This is slower than intersecting the single triangle from the lightfield, but much faster than intersecting the entire subdivision structure.
                 // TODO: need to walk the subdivision tree to find triangles in nearby tree nodes
-                intersection = geometry_subdivided.IntersectRayWithLeafNode(rayStart, rayDir, tri);
+                intersection = geometry_subdivided.IntersectRayWithLeafNode(rayStart, rayDir, tri, context);
 
 #if VISUALISATION
                 if (intersection != null)
@@ -178,7 +178,7 @@ namespace Engine3D.Raytrace
                 // Intersect ray against all triangles in the geometry.
                 // TODO: this is much slower than intersecting the single triangle from the lightfield, or the triangles in the same node.
                 // Performance will be reasonable if not many pixels reach this code path.
-                intersection = geometry_subdivided.IntersectRay(rayStart, rayDir);
+                intersection = geometry_subdivided.IntersectRay(rayStart, rayDir, context);
 
 #if VISUALISATION
                 if (intersection != null)
@@ -205,7 +205,7 @@ namespace Engine3D.Raytrace
 
         // Returns index of triangle intersected by central axis of lightfield cell's beam
         // Returns -1 if no triangle is intersected
-        private int BeamTriangleSimpleIntersect(Coord4D lfCoord)
+        private int BeamTriangleSimpleIntersect(Coord4D lfCoord, RenderContext context)
         {
             // switch to tracing the canonical ray associated with this lightfield entry, instead of the original ray (to avoid biasing values in lightfield)
             Vector cellRayStart;
@@ -217,7 +217,7 @@ namespace Engine3D.Raytrace
             // trace a primary ray against all triangles in scene
             // TODO: trace multiple rays to find the triangle with largest cross-section in the beam corresponding to this lightfield cell?
             // This may also avoid incorrectly storing 'missing triangle' value when primary ray misses because there are no triangles along central axis of cell's beam.
-            IntersectionInfo intersection = geometry_subdivided.IntersectRay(cellRayStart, cellRayDir);
+            IntersectionInfo intersection = geometry_subdivided.IntersectRay(cellRayStart, cellRayDir, context);
             if (intersection == null)
             {
                 return -1;
@@ -231,7 +231,7 @@ namespace Engine3D.Raytrace
 
         // Returns index of triangle most frequently intersected by random rays along lightfield cell's beam
         // Returns -1 if no triangle is intersected
-        private int BeamTriangleComplexIntersect(Coord4D lfCoord)
+        private int BeamTriangleComplexIntersect(Coord4D lfCoord, RenderContext context)
         {
             var triCount = new Dictionary<int, short>();
             for (int i = 0; i < 100; i++)
@@ -253,7 +253,7 @@ namespace Engine3D.Raytrace
                 // trace a primary ray against all triangles in scene
                 // TODO: trace multiple rays to find the triangle with largest cross-section in the beam corresponding to this lightfield cell?
                 // This may also avoid incorrectly storing 'missing triangle' value when primary ray misses because there are no triangles along central axis of cell's beam.
-                IntersectionInfo intersection = geometry_subdivided.IntersectRay(cellRayStart, cellRayDir);
+                IntersectionInfo intersection = geometry_subdivided.IntersectRay(cellRayStart, cellRayDir, context);
                 if (null != intersection)
                 {
                     var triIndex = intersection.triIndex;

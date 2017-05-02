@@ -364,7 +364,7 @@ namespace Engine3D.Raytrace
         /// <param name="start">The start position of the ray, in object space.</param>
         /// <param name="dir">The direction of the ray, in object space (not a unit vector).</param>
         /// <returns>Information about the nearest intersection, or null if no intersection.</returns>
-        public IntersectionInfo IntersectRay(Vector start, Vector dir)
+        public IntersectionInfo IntersectRay(Vector start, Vector dir, RenderContext context)
         {
             numRayTests = 0;
             NumNodesVisited = 0;
@@ -393,7 +393,7 @@ namespace Engine3D.Raytrace
             // TODO: this optimisation may actually slow down the code! On the Couch model, in 10x res, it is definitely slower!
             //var testedTriangles = new HashSet<Triangle>();
             ISet<Triangle> testedTriangles = null;
-            return RecursiveRayTrace(root, start, end, dir, testedTriangles);
+            return RecursiveRayTrace(root, start, end, dir, testedTriangles, context);
         }
 
         /// <summary>
@@ -403,7 +403,7 @@ namespace Engine3D.Raytrace
         /// <param name="dir">The direction of the ray, in object space (not a unit vector).</param>
         /// <param name="tri"></param>
         /// <returns>Information about the nearest intersection, or null if no intersection.</returns>
-        public IntersectionInfo IntersectRayWithLeafNode(Vector start, Vector dir, Triangle tri)
+        public IntersectionInfo IntersectRayWithLeafNode(Vector start, Vector dir, Triangle tri, RenderContext context)
         {
             Contract.Requires(tri != null);
             Contract.Requires(tri.HandleToLeafNode != null);
@@ -426,14 +426,14 @@ namespace Engine3D.Raytrace
             ISet<Triangle> testedTriangles = null;
 
             // TODO: avoid testing ray against given triangle? Triangle has likely already been tested.
-            return RecursiveRayTrace(node, start, end, dir, testedTriangles);
+            return RecursiveRayTrace(node, start, end, dir, testedTriangles, context);
         }
 
         #endregion
 
         #region Private methods
 
-        private IntersectionInfo RecursiveRayTrace(Node node, Vector start, Vector end, Vector dir, ISet<Triangle> testedTriangles)
+        private IntersectionInfo RecursiveRayTrace(Node node, Vector start, Vector end, Vector dir, ISet<Triangle> testedTriangles, RenderContext context)
         {
             // Does this node exist?
             if (node == null)
@@ -512,7 +512,7 @@ namespace Engine3D.Raytrace
                     //testedTriangles.Add(tri);
                     //bool triNoLongerNeeded = true;
 
-                    intersection = tri.IntersectRay(start, dir);
+                    intersection = tri.IntersectRay(start, dir, context);
                     if (intersection != null && intersection.rayFrac < closestIntersection.rayFrac)
                     {
                         Assert.IsTrue(intersection.rayFrac >= 0.0, "Ray fraction is negative");
@@ -589,7 +589,7 @@ namespace Engine3D.Raytrace
             {
                 case PlaneHalfSpace.NormalSide:
                     middle = end;
-                    intersection = RecursiveRayTrace(node.normalSide, start, middle, dir, testedTriangles);
+                    intersection = RecursiveRayTrace(node.normalSide, start, middle, dir, testedTriangles, context);
                     if (intersection != null)
                     {
 #if COLOR_NODES
@@ -603,7 +603,7 @@ namespace Engine3D.Raytrace
                     //if (!rayInPlaneNormalDir)
                     {
                         middle = start;
-                        intersection = RecursiveRayTrace(node.backSide, middle, end, dir, testedTriangles);
+                        intersection = RecursiveRayTrace(node.backSide, middle, end, dir, testedTriangles, context);
 #if COLOR_NODES
                         if (intersection != null)
                         {
@@ -616,7 +616,7 @@ namespace Engine3D.Raytrace
 
                 case PlaneHalfSpace.BackSide:
                     middle = end;
-                    intersection = RecursiveRayTrace(node.backSide, start, middle, dir, testedTriangles);
+                    intersection = RecursiveRayTrace(node.backSide, start, middle, dir, testedTriangles, context);
                     if (intersection != null)
                     {
 #if COLOR_NODES
@@ -630,7 +630,7 @@ namespace Engine3D.Raytrace
                     //if (rayInPlaneNormalDir)
                     {
                         middle = start;
-                        intersection = RecursiveRayTrace(node.normalSide, middle, end, dir, testedTriangles);
+                        intersection = RecursiveRayTrace(node.normalSide, middle, end, dir, testedTriangles, context);
 #if COLOR_NODES
                         if (intersection != null)
                         {

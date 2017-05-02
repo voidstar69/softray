@@ -52,7 +52,7 @@ namespace Engine3D.Raytrace
         /// A power-of-two size might make indexing into the 3D texture quicker.</param>
         /// <param name="instanceKey">A text value unique to the current 3D model.</param>
         /// <remarks>Not thread safe</remarks>
-        public ShadowMethod(IRayIntersectable geometry, Scene scene, bool staticShadows, byte resolution, string instanceKey, int randomSeed)
+        public ShadowMethod(IRayIntersectable geometry, Scene scene, bool staticShadows, byte resolution, string instanceKey, /*int randomSeed,*/ RenderContext context)
         {
             Contract.Requires(resolution > 0);
             Enabled = true;
@@ -60,7 +60,8 @@ namespace Engine3D.Raytrace
             this.scene = scene;
 
             // generate random offsets to area light, for soft shadows
-            var random = new Random(randomSeed);
+            var random = context.RNG;
+//            var random = new Random(randomSeed);
             areaLightOffsets = new Vector[softShadowQuality];
             for (int i = 0; i < softShadowQuality; i++)
             {
@@ -76,8 +77,8 @@ namespace Engine3D.Raytrace
                 // Create static soft shadow cache, and optionally load from disk.
                 // TODO: power-of-two size/resolution might make 3D array indexing quicker
                 // TODO: does this capture a fixed or varying currSurfaceNormal? If fixed, this could cause the cross-image-test pollution!
-                softShadowCache = new Raytrace.Texture3DCache<byte>(resolution, instanceKey, default(byte), default(byte) + 1,
-                    (pos) => { return (byte)(TraceRaysForSoftShadows(pos, currSurfaceNormal, geometry) * 254 + 1); }
+                softShadowCache = new Texture3DCache<byte>(resolution, instanceKey, default(byte), default(byte) + 1,
+                    (pos) => { return (byte)(TraceRaysForSoftShadows(pos, currSurfaceNormal, geometry, context) * 254 + 1); }
                 );
             }
         }
@@ -89,10 +90,10 @@ namespace Engine3D.Raytrace
         /// <param name="dir">The direction of the ray, in object space (not a unit vector).</param>
         /// <returns>Information about the nearest intersection, or null if no intersection.</returns>
         /// <remarks>Thread safe</remarks>
-        public IntersectionInfo IntersectRay(Vector start, Vector dir)
+        public IntersectionInfo IntersectRay(Vector start, Vector dir, RenderContext context)
         {
             // trace ray through underlying geometry
-            IntersectionInfo info = geometry.IntersectRay(start, dir);
+            IntersectionInfo info = geometry.IntersectRay(start, dir, context);
 
             // if shadowing is disabled, pass-through the ray intersection
             if (!Enabled)
@@ -112,7 +113,7 @@ namespace Engine3D.Raytrace
             else
             {
                 // Dynamic soft shadows, not cached
-                lightIntensityByte = (byte)(TraceRaysForSoftShadows(info.pos, info.normal, geometry) * 255);
+                lightIntensityByte = (byte)(TraceRaysForSoftShadows(info.pos, info.normal, geometry, context) * 255);
             }
 
             info.color = Color.ModulatePackedColor(info.color, lightIntensityByte);
@@ -140,7 +141,7 @@ namespace Engine3D.Raytrace
         /// <param name="surfaceNormal">Normal to surface at surface point</param>
         /// <param name="geometry">The geometry to be raytraced (both shadow caster and shadow receiver)</param>
         /// <returns>Fraction of light reaching the surface point (between 0 and 1): 0 = surface point fully shadowed; 1 = surface point not shadowed at all</returns>
-        private double TraceRaysForSoftShadows(Vector surfacePos, Vector surfaceNormal, Raytrace.IRayIntersectable geometry)
+        private double TraceRaysForSoftShadows(Vector surfacePos, Vector surfaceNormal, IRayIntersectable geometry, RenderContext context)
         {
             int rayEscapeCount = 0;
             for (int i = 0; i < softShadowQuality; i++)
@@ -165,7 +166,7 @@ namespace Engine3D.Raytrace
                 }
 
                 // Fire off shadow ray through underlying geometry
-                IntersectionInfo shadowInfo = geometry.IntersectRay(shadowRayStart, dirLightToSurface);
+                IntersectionInfo shadowInfo = geometry.IntersectRay(shadowRayStart, dirLightToSurface, context);
 
                 // Did the shadow ray hit an occluder before reaching the light?
                 if (shadowInfo == null || shadowInfo.rayFrac > 1.0)

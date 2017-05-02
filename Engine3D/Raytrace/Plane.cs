@@ -64,7 +64,7 @@ namespace Engine3D.Raytrace
         /// <param name="start">The start position of the ray, in object space.</param>
         /// <param name="dir">The direction of the ray, in object space (not a unit vector).</param>
         /// <returns>Information about the nearest intersection, or null if no intersection.</returns>
-        public IntersectionInfo IntersectRay(Vector start, Vector dir)
+        public IntersectionInfo IntersectRay(Vector start, Vector dir, RenderContext context)
         {
             // Project the start and direction vectors onto the plane normal.
             // Note that all distances are in multiples of the normal, NOT in space units!

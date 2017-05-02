@@ -89,13 +89,13 @@ namespace Engine3D.Raytrace
         /// <param name="dir">The direction of the ray, in object space (not a unit vector).</param>
         /// <returns>Information about the nearest intersection, or null if no intersection.</returns>
         /// <remarks>Construction of underlying <typeparamref name="LightField4D"/> is thread-safe</remarks>
-        public IntersectionInfo IntersectRay(Vector start, Vector dir)
+        public IntersectionInfo IntersectRay(Vector start, Vector dir, RenderContext context)
         {
             Contract.Ensures(!Enabled || Contract.Result<IntersectionInfo>() != null);
 
             // if lightfield is disabled, pass-through the ray intersection
             if (!Enabled)
-                return geometry.IntersectRay(start, dir);
+                return geometry.IntersectRay(start, dir, context);
 
             // double-check locking pattern
             if (lightFieldCache == null)
@@ -116,13 +116,13 @@ namespace Engine3D.Raytrace
 
             // TODO: if ray start is within lightfield sphere, throw an exception? Might occur for shadow/AO rays.
 
-            uint finalColor = CalcColorForRay(start, dir);
+            uint finalColor = CalcColorForRay(start, dir, context);
             return new IntersectionInfo{ color = finalColor, normal = Vector.Forward };
         }
 
         // TODO: is this method multi-thread safe?
         // cache ray colors in a 4D light field
-        private uint CalcColorForRay(Vector rayStart, Vector rayDir)
+        private uint CalcColorForRay(Vector rayStart, Vector rayDir, RenderContext context)
         {
             // TODO: do we need locking to ensure another thread does not overwrite lightfield cache entry(s)?
 
@@ -137,7 +137,7 @@ namespace Engine3D.Raytrace
                 if (lfCoord == null)
                     return backgroundColor;
 
-                return CalcColorForCoord(lfCoord);
+                return CalcColorForCoord(lfCoord, context);
             }
             else
             {
@@ -171,7 +171,7 @@ namespace Engine3D.Raytrace
                                     (byte)((coord.Item2 + v) % vRes),
                                     (byte)((coord.Item3 + s) % sRes),
                                     (byte)((coord.Item4 + t) % tRes));
-                                var color = new Color(CalcColorForCoord(newCoord));
+                                var color = new Color(CalcColorForCoord(newCoord, context));
                                 finalColor += color * uFactor * vFactor * sFactor * (t == 1 ? tFrac : 1 - tFrac);
                             }
                         }
@@ -181,7 +181,7 @@ namespace Engine3D.Raytrace
             }
         }
 
-        private uint CalcColorForCoord(Coord4D lfCoord)
+        private uint CalcColorForCoord(Coord4D lfCoord, RenderContext context)
         {
             // Index into light field cache using 4D spherical coordinates
             uint lfCacheEntry = lightFieldCache.ReadCache(lfCoord.Item1, lfCoord.Item2, lfCoord.Item3, lfCoord.Item4);
@@ -200,7 +200,7 @@ namespace Engine3D.Raytrace
 
             // we did not find a color in the light field corresponding to this ray, so trace this ray against the geometry
             // TODO: this line is the major performance bottleneck!
-            IntersectionInfo info = geometry.IntersectRay(rayStart, rayDir);
+            IntersectionInfo info = geometry.IntersectRay(rayStart, rayDir, context);
             if (info == null)
             {
                 // ray did not hit the geometry, so cache background color into the 4D light field

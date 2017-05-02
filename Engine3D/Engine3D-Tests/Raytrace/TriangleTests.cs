@@ -9,6 +9,7 @@ namespace Engine3D_Tests
     public class TriangleTests
     {
         private static Random random = new Random();
+        private static RenderContext context = new RenderContext(random);
 
         const uint color = 12345;
         readonly static Vector origin = new Vector();
@@ -31,7 +32,7 @@ namespace Engine3D_Tests
         public void RayHitsTriangle()
         {
             var tri = new Triangle(origin, right, up, color);
-            var info = tri.IntersectRay(origin + backward, forward);
+            var info = tri.IntersectRay(origin + backward, forward, context);
             Assert.IsNotNull(info);
             Assert.AreEqual(origin, info.pos);
             Assert.AreEqual(backward, info.normal);
@@ -43,7 +44,7 @@ namespace Engine3D_Tests
         public void RayFromTriangleVertex_HitsTriangle()
         {
             var tri = new Triangle(origin, right, up, color);
-            var info = tri.IntersectRay(right, forward);
+            var info = tri.IntersectRay(right, forward, context);
             Assert.IsNotNull(info);
             Assert.AreEqual(right, info.pos);
             Assert.AreEqual(backward, info.normal);
@@ -55,7 +56,7 @@ namespace Engine3D_Tests
         public void TriangleIsOneSided_RayFromOtherSideMisses()
         {
             var tri = new Triangle(origin, right, up, color);
-            var info = tri.IntersectRay(origin + forward, backward);
+            var info = tri.IntersectRay(origin + forward, backward, context);
             Assert.IsNull(info);
         }
 
@@ -86,7 +87,7 @@ namespace Engine3D_Tests
                 var start = MakeRandomVector(1, 1, 1);
                 var dir = MakeRandomVector(-1, 1, -1, 1, -1, 1);
                 //var dir = forward;
-                var info = plane.IntersectRay(start, dir);
+                var info = plane.IntersectRay(start, dir, context);
                 if (info != null)
                     numRaysHit++;
             }
@@ -125,7 +126,7 @@ namespace Engine3D_Tests
                 var start = MakeRandomVector(1, 1, 1);
                 //var dir = MakeRandomVector(1, 1, -1);
                 var dir = forward;
-                var info = tri.IntersectRay(start, dir);
+                var info = tri.IntersectRay(start, dir, context);
                 if (info != null)
                     numRaysHit++;
             }
@@ -166,7 +167,7 @@ namespace Engine3D_Tests
                 var start = MakeRandomVector(1, 1, 1);
                 var dir = MakeRandomVector(-1, 1, -1, 1, -1, 1);
                 //var dir = forward;
-                var info = sphere.IntersectRay(start, dir);
+                var info = sphere.IntersectRay(start, dir, context);
                 if (info != null)
                     numRaysHit++;
             }
@@ -207,7 +208,7 @@ namespace Engine3D_Tests
                 var start = MakeRandomVector(-0.3, 0.3, -0.3, 0.3, 0.5, 1);
                 var dir = MakeRandomVector(-0.5, 0.5, -0.5, 0.5, -1, -1);
                 //var dir = MakeRandomVector(1, 1, -1);
-                var info = box.IntersectRay(start, dir);
+                var info = box.IntersectRay(start, dir, context);
                 if (info != null)
                     numRaysHit++;
             }

@@ -27,7 +27,7 @@ namespace Engine3D.Raytrace
         /// <param name="start">The start position of the ray, in object space.</param>
         /// <param name="dir">The direction of the ray, in object space (not a unit vector).</param>
         /// <returns>Information about the nearest intersection, or null if no intersection.</returns>
-        public IntersectionInfo IntersectRay(Vector start, Vector dir)
+        public IntersectionInfo IntersectRay(Vector start, Vector dir, RenderContext context)
         {
             // TODO: some rays should be short (e.g. ambient occlusion rays). Make the max ray distance an optional parameter?
             Vector end = start + dir * 10;

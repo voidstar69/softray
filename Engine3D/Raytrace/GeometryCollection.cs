@@ -41,7 +41,7 @@ namespace Engine3D.Raytrace
         /// <param name="start">The start position of the ray, in object space.</param>
         /// <param name="dir">The direction of the ray, in object space (not a unit vector).</param>
         /// <returns>Information about the nearest intersection, or null if no intersection.</returns>
-        public IntersectionInfo IntersectRay(Vector start, Vector dir)
+        public IntersectionInfo IntersectRay(Vector start, Vector dir, RenderContext context)
         {
             numRayTests = 0;
             IntersectionInfo closest = new IntersectionInfo();
@@ -49,7 +49,7 @@ namespace Engine3D.Raytrace
 
             foreach (IRayIntersectable geometry in _geomList)
             {
-                IntersectionInfo curr = geometry.IntersectRay(start, dir);
+                IntersectionInfo curr = geometry.IntersectRay(start, dir, context);
                 if (curr != null && curr.rayFrac < closest.rayFrac)
                 {
                     closest = curr;

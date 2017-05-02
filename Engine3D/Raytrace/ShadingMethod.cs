@@ -33,10 +33,10 @@ namespace Engine3D.Raytrace
         /// <param name="start">The start position of the ray, in object space.</param>
         /// <param name="dir">The direction of the ray, in object space (not a unit vector).</param>
         /// <returns>Information about the nearest intersection, or null if no intersection.</returns>
-        public IntersectionInfo IntersectRay(Vector start, Vector dir)
+        public IntersectionInfo IntersectRay(Vector start, Vector dir, RenderContext context)
         {
             // trace ray through underlying geometry
-            IntersectionInfo info = geometry.IntersectRay(start, dir);
+            IntersectionInfo info = geometry.IntersectRay(start, dir, context);
 
             // if shading is disabled, pass-through the ray intersection
             if (!Enabled)

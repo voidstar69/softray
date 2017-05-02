@@ -42,7 +42,6 @@ namespace Engine3D.Raytrace
         private readonly int cacheSize;
         private readonly T[] cacheData;
         private readonly string cacheFilePath;
-        private readonly Random defaultRandom = new Random();
 
         private const int numCalcsBetweenPersists = 10000;
         private int numCalcsUntilNextPersist = numCalcsBetweenPersists;
@@ -99,7 +98,7 @@ namespace Engine3D.Raytrace
         /// <param name="geometry">The geometry to be raytraced (both occlusion caster and occlusion receiver)</param>
         /// <param name="random">Random number generator to use. Set to <value>NULL</value> to use the default random number generator</param>
         /// <returns>Fraction of non-occlusion at surface point (between 1 and 255): 1 = surface point fully occluded by neighbour surfaces; 255 = surface point not occluded at all</returns>
-        public T CacheAmbientOcclusion(IntersectionInfo surface, Raytrace.IRayIntersectable geometry, Random random = null)
+        public T CacheAmbientOcclusion(IntersectionInfo surface, Raytrace.IRayIntersectable geometry, RenderContext context)
         {
             Contract.Requires(surface != null);
 
@@ -131,7 +130,7 @@ namespace Engine3D.Raytrace
             if (!EnableCache)
             {
                 // calc shading intensity based on percentage AO shadowing
-                double unoccludedFactor = CalcAmbientOcclusion(surface, geometry, random ?? defaultRandom);
+                double unoccludedFactor = CalcAmbientOcclusion(surface, geometry, context);
                 // scale to range [1, 255]. We avoid zero as this is a sentinel value indicating empty cache entry.
                 return (T)(unoccludedFactor * 254 + 1);
             }
@@ -147,7 +146,7 @@ namespace Engine3D.Raytrace
                     if (EmptyCacheEntry == cacheData[cacheIndex])
                     {
                         // calc shading intensity based on percentage AO shadowing
-                        double unoccludedFactor = CalcAmbientOcclusion(surface, geometry, random ?? defaultRandom);
+                        double unoccludedFactor = CalcAmbientOcclusion(surface, geometry, context);
                         // scale to range [1, 255]. We avoid zero as this is a sentinel value indicating empty cache entry.
                         lightByte = (T)(unoccludedFactor * 254 + 1);
                         cacheData[cacheIndex] = lightByte;
@@ -174,10 +173,11 @@ namespace Engine3D.Raytrace
         /// <param name="geometry">The geometry to be raytraced (both occlusion caster and occlusion receiver)</param>
         /// <param name="random">Random number generator to use</param>
         /// <returns>Fraction of non-occlusion at surface point (between 0 and 1): 0 = surface point fully occluded by neighbour surfaces; 1 = surface point not occluded at all</returns>
-        private double CalcAmbientOcclusion(IntersectionInfo surface, Raytrace.IRayIntersectable geometry, Random random)
+        private double CalcAmbientOcclusion(IntersectionInfo surface, Raytrace.IRayIntersectable geometry, RenderContext context)
         {
             Contract.Ensures(0 <= Contract.Result<double>() && Contract.Result<double>() <= 1);
 
+            var random = context.RNG;
             var rayStart = surface.pos + surface.normal * ambientOcclusionProbeOffset;
 
             Vector avgEscapedRayDir = new Vector();
@@ -205,7 +205,7 @@ namespace Engine3D.Raytrace
 
                 // Fire off ray to check for nearby surface in chosen direction
                 // TODO: might be more efficient if ray tracing stopped after a short distance from ray origin
-                Raytrace.IntersectionInfo shadowInfo = geometry.IntersectRay(rayStart, rayDir);
+                Raytrace.IntersectionInfo shadowInfo = geometry.IntersectRay(rayStart, rayDir, context);
                 if (shadowInfo == null || shadowInfo.rayFrac > ambientOcclusionProbeDist)
                 {
                     // This ray did not hit a nearby surface

@@ -71,9 +71,9 @@ namespace Engine3D.Raytrace
         /// <param name="start">The start position of the ray, in object space.</param>
         /// <param name="dir">The direction of the ray, in object space (not a unit vector).</param>
         /// <returns>Information about the nearest intersection, or null if no intersection.</returns>
-        public IntersectionInfo IntersectRay(Vector start, Vector dir)
+        public IntersectionInfo IntersectRay(Vector start, Vector dir, RenderContext context)
         {
-            IntersectionInfo info = plane.IntersectRay(start, dir);
+            IntersectionInfo info = plane.IntersectRay(start, dir, context);
             if (info != null)
             {
                 Assert.IsTrue(info.rayFrac >= 0.0, "Ray fraction is negative");

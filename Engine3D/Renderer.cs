@@ -1576,7 +1576,8 @@ namespace Engine3D
             {
                 var instanceKey = string.Format("softShadow_tri{0}_vert{1}", instance.Model.Triangles.Count, instance.Model.Vertices.Count);
                 // TODO: power-of-two resolution might make 3D texture indexing quicker
-                shadowMethod = new ShadowMethod(rootGeometry, scene, rayTraceShadowsStatic, staticShadowRes, instanceKey, rayTraceRandomSeed); // TODO: this assumes only one instance globally!
+                var context = new RenderContext(new Random(rayTraceRandomSeed));
+                shadowMethod = new ShadowMethod(rootGeometry, scene, rayTraceShadowsStatic, staticShadowRes, instanceKey, /*rayTraceRandomSeed*/ context); // TODO: this assumes only one instance globally!
                 shadowMethod.CacheStaticShadowsToFile = cacheStaticShadowsToFile;
                 rootGeometry = shadowMethod;
             }
@@ -1671,8 +1672,8 @@ namespace Engine3D
         // Thread safe
         private void RaytraceBlock(Instance instance, IRayIntersectable geometry, int left, int top, int sizeX, int sizeY)
         {
-            // Create a RNG per thread - the RNG breaks when shared between threads (without locking)
-            var random = new Random(rayTraceRandomSeed);
+            // Create a rendering context per thread, containing a RNG. Otherwise the RNG breaks when shared between threads (without locking).
+            RenderContext context = new RenderContext(new Random(rayTraceRandomSeed));
 
             // TODO: fix stats for multiple blocks
             totalNodesVisits = 0;
@@ -1711,7 +1712,7 @@ namespace Engine3D
                         Vector dir_World = instance.TransformDirectionReverse(dir_View);
 
                         // Fire off camera ray
-                        uint color = TraceRayComplex(instance, geometry, random, ref start_World, ref dir_World);
+                        uint color = TraceRayComplex(instance, geometry, ref start_World, ref dir_World, context);
 
 //#if DEBUG
 //                        if (sizeX - col - 1 == rayTraceDebug)
@@ -1780,7 +1781,7 @@ namespace Engine3D
                                 }
 
                                 // Fire off camera ray
-                                uint color = TraceRayComplex(instance, geometry, random, ref subStart_World, ref dir_World);
+                                uint color = TraceRayComplex(instance, geometry, ref subStart_World, ref dir_World, context);
 
 //#if DEBUG
 //                                if (sizeX - col - 1 == rayTraceDebug)
@@ -1829,13 +1830,13 @@ namespace Engine3D
         // TODO: make this method static and pass in backgroundColor as a parameter
         // TODO: extract all per-thread code into a new class. The code mostly operates on parameters, not data members.
         // Thread safe
-        private uint TraceRayComplex(Instance instance, IRayIntersectable geometry, Random random, ref Vector start_World, ref Vector dir_World)
+        private uint TraceRayComplex(Instance instance, IRayIntersectable geometry, ref Vector start_World, ref Vector dir_World, RenderContext context)
         {
             Vector rayStart = start_World;
             Vector rayDir = dir_World;
 
             // trace a primary ray against all triangles in scene
-            IntersectionInfo info = TraceRaySimple(geometry, ref rayStart, ref rayDir);
+            IntersectionInfo info = TraceRaySimple(geometry, ref rayStart, ref rayDir, context);
             if (info == null)
             {
                 // ray did not hit the scene - return background color
@@ -1863,10 +1864,8 @@ namespace Engine3D
         // TODO: this method should live on the geometry object, so that it can be used by other classes
         // TODO: make this method static, and pass the statistics in as a ref parameter
         // Thread safe
-        private IntersectionInfo TraceRaySimple(IRayIntersectable geometry, ref Vector start_World, ref Vector dir_World)
+        private IntersectionInfo TraceRaySimple(IRayIntersectable geometry, ref Vector start_World, ref Vector dir_World, RenderContext context)
         {
-
-
 /*
             // TODO: quickly test the sphere primitive alone
             var sphere = new Sphere(new Vector(0, 0, 0), 0.5);
@@ -1895,7 +1894,7 @@ namespace Engine3D
 
 
             // TODO: this line is the major bottleneck!
-            IntersectionInfo info = geometry.IntersectRay(start_World, dir_World);
+            IntersectionInfo info = geometry.IntersectRay(start_World, dir_World, context);
 
             Interlocked.Increment(ref numRaysFired);
             Interlocked.Add(ref totalGeometryTests, geometry.NumRayTests);

@@ -62,10 +62,10 @@ namespace Engine3D.Raytrace
         /// <param name="dir">The direction of the ray, in object space (not a unit vector).</param>
         /// <returns>Information about the nearest intersection, or null if no intersection.</returns>
         /// <remarks>Thread safe</remarks>
-        public IntersectionInfo IntersectRay(Vector start, Vector dir)
+        public IntersectionInfo IntersectRay(Vector start, Vector dir, RenderContext context)
         {
             // trace ray through underlying geometry
-            IntersectionInfo info = geometry.IntersectRay(start, dir);
+            IntersectionInfo info = geometry.IntersectRay(start, dir, context);
 
             // if AO is disabled, pass-through the ray intersection
             if (!Enabled)
@@ -93,7 +93,7 @@ namespace Engine3D.Raytrace
             ambientOcclusionCache.EnableCache = EnableAoCache;
 
             // shade surface point based on nearby geometry blocking ambient light from reaching surface
-            var lightIntensityByte = ambientOcclusionCache.CacheAmbientOcclusion(info, geometry);
+            var lightIntensityByte = ambientOcclusionCache.CacheAmbientOcclusion(info, geometry, context);
             info.color = Color.ModulatePackedColor(info.color, lightIntensityByte);
             return info;
         }

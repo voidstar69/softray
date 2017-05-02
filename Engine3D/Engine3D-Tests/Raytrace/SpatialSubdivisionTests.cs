@@ -11,6 +11,7 @@ namespace Engine3D_Tests
     public class SpatialSubdivisionTests
     {
         private static Random random = new Random();
+        private static RenderContext context = new RenderContext(random);
 
         public SpatialSubdivisionTests()
         {
@@ -174,7 +175,7 @@ namespace Engine3D_Tests
             {
                 var start = MakeRandomVector(triangleSpaceSize);
                 var dir = MakeRandomVector(-1, 1, -1, 1, -1, 1);
-                var info = tree.IntersectRay(start, dir);
+                var info = tree.IntersectRay(start, dir, context);
                 if (info != null)
                     numRaysHit++;
             }
@@ -209,8 +210,8 @@ namespace Engine3D_Tests
             {
                 var start = MakeRandomVector(triangleSpaceSize);
                 var dir = MakeRandomVector(-1, 1, -1, 1, -1, 1);
-                var info = tree.IntersectRay(start, dir);
-                var infoBase = triSet.IntersectRay(start, dir);
+                var info = tree.IntersectRay(start, dir, context);
+                var infoBase = triSet.IntersectRay(start, dir, context);
                 Assert.AreEqual(infoBase == null, info == null, "Ray " + i + ": SpatialSubdivision and GeometryCollection differ in intersection status");
                 if (info != null)
                 {
