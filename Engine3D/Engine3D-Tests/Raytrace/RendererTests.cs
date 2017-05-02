@@ -14,11 +14,16 @@ namespace Engine3D_Tests
     [TestClass]
     public class RendererTests
     {
+        private const int maxImageWidth = 100;
+        private const int maxImageHeight = 100;
+
         // Faster regression test
-        private const int imageWidth = 100;
-        private const int imageHeight = 100;
+        private const int defaultResolution = 100;
+        //private const int imageWidth = 100;
+        //private const int imageHeight = 100;
 
         // Slower regression test
+        //private const int defaultResolution = 400;
         //private const int imageWidth = 400;
         //private const int imageHeight = 400;
 
@@ -48,20 +53,21 @@ namespace Engine3D_Tests
 
         private int numMissingBaselines = 0;
 
-        private static int[] pixels = new int[imageWidth * imageHeight];
+        private static int[] pixels = new int[maxImageWidth * maxImageHeight];
 
         [TestInitialize]
         public void Init()
         {
         }
 
-        private static void RendererSetup(Renderer renderer, string modelFileName, double pitchDegrees, double yawDegrees, double rollDegrees, double objectDepth)
+        private static void RendererSetup(Renderer renderer, string modelFileName,
+            double pitchDegrees, double yawDegrees, double rollDegrees, double objectDepth, int resolution)
         {
             renderer.BackgroundColor = 0xff00ff; // pink
             //renderer.BackgroundColor = 0xff0000; // red
             //renderer.BackgroundColor = 0x0000ff; // blue
 
-            renderer.SetRenderingSurface(imageWidth, imageHeight, pixels);
+            renderer.SetRenderingSurface(resolution, resolution, pixels);
 
             // Load 3D model from disk
             using (Stream stream = new FileStream(modelFileName, FileMode.Open, FileAccess.Read))
@@ -159,7 +165,7 @@ namespace Engine3D_Tests
         public void RaytraceStaticShadow()
         {
             RaytraceScenario(shadows: true, staticShadows: true);
-            RaytraceScenario(shading: false, shadows: true, staticShadows: true);
+            RaytraceScenario(shadows: true, staticShadows: true, shading: false);
 
             if (numMissingBaselines > 0)
                 Assert.Fail("{0} missing baseline images were recreated", numMissingBaselines);
@@ -170,7 +176,7 @@ namespace Engine3D_Tests
         [TestMethod]
         public void RaytraceShadowAndFocalBlur()
         {
-            RaytraceScenario(focalBlur: true, shadows: true, subPixelRes: 4);
+            RaytraceScenario(focalBlur: true, shadows: true, subPixelRes: 4, resolution: defaultResolution / 2);
 
             // TODO: test higher quality focal blur, and different focal depths. Also test it without shadows?
 //            RaytraceScenario(focalBlur: true, shadows: true, subPixelRes: 8, focalDepth: objectDepth + 0.5);
@@ -198,7 +204,7 @@ namespace Engine3D_Tests
         [TestMethod]
         public void RaytraceShadowAndAntiAlias()
         {
-            RaytraceScenario(shadows: true, subPixelRes: 4);
+            RaytraceScenario(shadows: true, subPixelRes: 4, resolution: defaultResolution / 2);
 
             if (numMissingBaselines > 0)
                 Assert.Fail("{0} missing baseline images were recreated", numMissingBaselines);
@@ -242,12 +248,13 @@ namespace Engine3D_Tests
 
         // TODO: add flag for quad-filtering on color lightfield
         private void RaytraceScenario(bool shading = true, bool focalBlur = false, bool shadows = false, bool staticShadows = false,
-            bool lightField = false, bool lightFieldWithTris = false, bool pathTracing = false, int subPixelRes = 1, double pitchDegrees = defaultPitchDegrees,
-            double yawDegrees = defaultYawDegrees, double rollDegrees = defaultRollDegrees, double focalDepth = -1, GeometryCollection extraGeometry = null)
+            bool lightField = false, bool lightFieldWithTris = false, bool pathTracing = false, int subPixelRes = 1, int resolution = 100,
+            double pitchDegrees = defaultPitchDegrees, double yawDegrees = defaultYawDegrees, double rollDegrees = defaultRollDegrees,
+            double focalDepth = -1, GeometryCollection extraGeometry = null)
         {
             using (var renderer = new Renderer())
             {
-                RendererSetup(renderer, modelFileName, pitchDegrees, yawDegrees, rollDegrees, objectDepth);
+                RendererSetup(renderer, modelFileName, pitchDegrees, yawDegrees, rollDegrees, objectDepth, resolution);
 
                 // TODO: raytracer has slight difference on cube edges between Release and Debug mode. Rounding error?
                 renderer.rayTrace = true;
@@ -281,7 +288,7 @@ namespace Engine3D_Tests
                 if (renderer.rayTraceShadowsStatic && !renderer.rayTraceShadows)
                     return;
 
-                var dirPath = "raytrace/" + imageWidth + 'x' + imageHeight;
+                var dirPath = "raytrace/" + resolution + 'x' + resolution;
                 var testName = dirPath + '/' +
                     (renderer.rayTracePathTracing ? "pathTracing_" : "") +
                     (renderer.rayTraceShading ? "shading" : "noShading") +
@@ -305,7 +312,7 @@ namespace Engine3D_Tests
 
                 try
                 {
-                    RenderAndTest(testName, renderer);
+                    RenderAndTest(testName, renderer, resolution, resolution);
                 }
                 catch(Exception)
                 {
@@ -356,9 +363,10 @@ namespace Engine3D_Tests
         [TestMethod]
         public void RasteriseTest()
         {
+            const int resolution = defaultResolution;
             using (var renderer = new Renderer())
             {
-                RendererSetup(renderer, modelFileName, defaultPitchDegrees, defaultYawDegrees, defaultRollDegrees, objectDepth);
+                RendererSetup(renderer, modelFileName, defaultPitchDegrees, defaultYawDegrees, defaultRollDegrees, objectDepth, resolution);
                 renderer.rayTrace = false;
 
                 var flags = new bool[5];
@@ -377,7 +385,7 @@ namespace Engine3D_Tests
                     if (renderer.perPixelShading && !renderer.shading)
                         continue;
 
-                    var dirPath = "rasterise/" + imageWidth + 'x' + imageHeight;
+                    var dirPath = "rasterise/" + resolution + 'x' + resolution;
                     var testName = dirPath + '/' +
                         (renderer.perPixelShading ? "perPixelShading" : (renderer.shading ? "shading" : "noShading")) +
                         (renderer.pointLighting ? "_pointLit" : "") +
@@ -387,7 +395,7 @@ namespace Engine3D_Tests
 
                     Directory.CreateDirectory(candidatePath + dirPath);
                     Directory.CreateDirectory(baselinePath + dirPath);
-                    RenderAndTest(testName, renderer);
+                    RenderAndTest(testName, renderer, resolution, resolution);
                 }
 
                 if (numMissingBaselines > 0)
@@ -399,7 +407,7 @@ namespace Engine3D_Tests
         /// Render image using current renderer settings, and compare image against a baseline image.
         /// </summary>
         /// <param name="testName">Unique name for the test. Can contain slashes.</param>
-        private void RenderAndTest(string testName, Renderer renderer)
+        private void RenderAndTest(string testName, Renderer renderer, int imageWidth, int imageHeight)
         {
             renderer.Render();
 
