@@ -105,7 +105,7 @@ namespace Engine3D_Tests
         // Release mode: 6 mins @ res 100
         // Release mode: (5 flags) 54 seconds @ res 400
         // TODO: very, very slow! Make this much faster!
-        [TestMethod]
+        [TestMethod, Ignore]
         public void RaytraceTest()
         {
             var flags = new bool[6];
@@ -190,7 +190,7 @@ namespace Engine3D_Tests
         // TODO: produced image is slightly different if this test is run in isolation vs run together with test RaytraceStaticShadow. Why?
         // TODO: number of threads affects resulting image, slighty changing quite a few pixels
         // Most likely the threads are racing each other to update the shadow cache, causing non-deterministic behaviour!
-        [TestMethod]
+        [TestMethod, Ignore]
         public void RaytraceStaticShadowAndFocalBlur()
         {
             RaytraceScenario(focalBlur: true, shadows: true, staticShadows: true, subPixelRes: 4);
