@@ -154,17 +154,21 @@ namespace Engine3D.Raytrace
             // TODO: optimise ray-sphere intersection code
 
             // Make dir a unit vector.
-            // TODO: not strictly neccessary, but it makes the quadratic equation a bit simpler
+            // TODO: not strictly neccessary, but it makes the quadratic equation a bit simpler.
+            // TODO: make this function faster by removing the normalise, and accounting for sphereToStartProjDir
+            // being scaled up by the length of dir.
             dir.Normalise();
 
             // Solve quadratic equation to determine number of intersection points between (infinite) line and sphere: 0, 1 or 2 intersections
             Vector sphereToStart = start - center; // o - c
             double sphereToStartProjDir = sphereToStart.DotProduct(dir); // l.(o - c)
-            double sphereToStartDistSqr = sphereToStart.LengthSqr; // |o - c|^2
+            double sphereToStartProjDirSqr = sphereToStartProjDir * sphereToStartProjDir;
 
             // Is the entire sphere behind the start of the ray?
-            if(sphereToStartProjDir > radiusSqr)
+            if(sphereToStartProjDirSqr > radiusSqr)
                 return null;
+
+            double sphereToStartDistSqr = sphereToStart.LengthSqr; // |o - c|^2
 
             // TODO: ignore rays starting inside the sphere?
             // Is any part of the sphere behind the start of the ray?
@@ -173,8 +177,8 @@ namespace Engine3D.Raytrace
             // Is the sphere surrounding the ray start? TODO: is this ever true after the previous check?
 //            if(sphereToStartDistSqr < radiusSqr)
 //                return null;
-            
-            double termUnderSqrRoot = sphereToStartProjDir * sphereToStartProjDir - sphereToStartDistSqr + radiusSqr; // (l.(o - c))^2 - |o - c|^2 + r^2
+
+            double termUnderSqrRoot = sphereToStartProjDirSqr - sphereToStartDistSqr + radiusSqr; // (l.(o - c))^2 - |o - c|^2 + r^2
             if (termUnderSqrRoot < epsilon) // use epsilon to avoid unstable pixels flickering between one root and zero roots
                 // (infinite) line does not intersect sphere
                 return null;
