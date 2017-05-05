@@ -143,6 +143,7 @@ namespace Engine3D_Tests
         {
             // TODO: a million rays takes ~500ms in Release mode; ~1s in Debug mode (all with laptop on Power Saver mode)
             // TODO: optimise ray-sphere intersection code
+            // TODO: this only tests the case of ray hitting the sphere. Also test performance of misses and near-misses, or aggregate performance.
 #if DEBUG
             // TODO
             const double minMillionRaysPerSec = 0.70;
