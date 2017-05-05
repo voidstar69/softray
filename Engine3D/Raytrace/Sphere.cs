@@ -161,12 +161,16 @@ namespace Engine3D.Raytrace
             Vector sphereToStart = start - center; // o - c
             double sphereToStartProjDir = sphereToStart.DotProduct(dir); // l.(o - c)
             double sphereToStartDistSqr = sphereToStart.LengthSqr; // |o - c|^2
-            
-            // Is the sphere behind the start of the ray?
-            if(sphereToStartProjDir > 0)
+
+            // Is the entire sphere behind the start of the ray?
+            if(sphereToStartProjDir > radiusSqr)
                 return null;
-            // Is the sphere surrounding the ray start?
+
             // TODO: ignore rays starting inside the sphere?
+            // Is any part of the sphere behind the start of the ray?
+//            if(sphereToStartProjDir > -radiusSqr)
+//                return null;
+            // Is the sphere surrounding the ray start? TODO: is this ever true after the previous check?
 //            if(sphereToStartDistSqr < radiusSqr)
 //                return null;
             
