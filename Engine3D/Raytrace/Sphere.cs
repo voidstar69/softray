@@ -162,23 +162,22 @@ namespace Engine3D.Raytrace
             // Solve quadratic equation to determine number of intersection points between (infinite) line and sphere: 0, 1 or 2 intersections
             Vector sphereToStart = start - center; // o - c
             double sphereToStartProjDir = sphereToStart.DotProduct(dir); // l.(o - c)
-            double sphereToStartProjDirSqr = sphereToStartProjDir * sphereToStartProjDir;
 
             // Is the entire sphere behind the start of the ray?
-            if(sphereToStartProjDirSqr > radiusSqr)
+            if(sphereToStartProjDir > radius)
                 return null;
 
             double sphereToStartDistSqr = sphereToStart.LengthSqr; // |o - c|^2
 
             // TODO: ignore rays starting inside the sphere?
             // Is any part of the sphere behind the start of the ray?
-//            if(sphereToStartProjDir > -radiusSqr)
+//            if(sphereToStartProjDir > -radius)
 //                return null;
             // Is the sphere surrounding the ray start? TODO: is this ever true after the previous check?
 //            if(sphereToStartDistSqr < radiusSqr)
 //                return null;
 
-            double termUnderSqrRoot = sphereToStartProjDirSqr - sphereToStartDistSqr + radiusSqr; // (l.(o - c))^2 - |o - c|^2 + r^2
+            double termUnderSqrRoot = sphereToStartProjDir * sphereToStartProjDir - sphereToStartDistSqr + radiusSqr; // (l.(o - c))^2 - |o - c|^2 + r^2
             if (termUnderSqrRoot < epsilon) // use epsilon to avoid unstable pixels flickering between one root and zero roots
                 // (infinite) line does not intersect sphere
                 return null;
