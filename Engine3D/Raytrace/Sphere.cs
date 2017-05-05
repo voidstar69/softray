@@ -162,9 +162,13 @@ namespace Engine3D.Raytrace
             double sphereToStartProjDir = sphereToStart.DotProduct(dir); // l.(o - c)
             double sphereToStartDistSqr = sphereToStart.LengthSqr; // |o - c|^2
             
-            // The sphere is behind the ray, or surrounding the ray start
-            if(sphereToStartProjDir > 0 || sphereToStartDistSqr < radiusSqr)
+            // Is the sphere behind the start of the ray?
+            if(sphereToStartProjDir > 0)
                 return null;
+            // Is the sphere surrounding the ray start?
+            // TODO: ignore rays starting inside the sphere?
+//            if(sphereToStartDistSqr < radiusSqr)
+//                return null;
             
             double termUnderSqrRoot = sphereToStartProjDir * sphereToStartProjDir - sphereToStartDistSqr + radiusSqr; // (l.(o - c))^2 - |o - c|^2 + r^2
             if (termUnderSqrRoot < epsilon) // use epsilon to avoid unstable pixels flickering between one root and zero roots
