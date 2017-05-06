@@ -1,4 +1,6 @@
-﻿using System;
+﻿#define APPVEYOR_PERFORMANCE_MARGINS
+
+using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Engine3D.Raytrace;
 using Vector = Engine3D.Vector;
@@ -8,20 +10,19 @@ namespace Engine3D_Tests
     [TestClass]
     public class TriangleTests
     {
-        private static Random random = new Random();
-        private static RenderContext context = new RenderContext(random);
-
-        const uint color = 12345;
-        readonly static Vector origin = new Vector();
-        readonly static Vector right = new Vector(1, 0, 0);
-        readonly static Vector up = new Vector(0, 1, 0);
-        readonly static Vector forward = new Vector(0, 0, -1);
-        readonly static Vector backward = new Vector(0, 0, 1);
+        private const uint color = 0xffffffff; // opaque white
+        private readonly static Vector origin = new Vector();
+        private readonly static Vector right = new Vector(1, 0, 0);
+        private readonly static Vector up = new Vector(0, 1, 0);
+        private readonly static Vector forward = new Vector(0, 0, -1);
+        private readonly static Vector backward = new Vector(0, 0, 1);
+        private readonly static Random random = new Random();
+        private readonly static RenderContext context = new RenderContext(random);
 
         [TestMethod]
         public void CreateZeroSizeTriangle()
         {
-            var tri = new Triangle(origin, origin, origin, 0);
+            var tri = new Triangle(origin, origin, origin, color);
             Assert.IsNotNull(tri);
             Assert.AreEqual(origin, tri.Vertex1);
             Assert.AreEqual(origin, tri.Vertex2);
@@ -65,16 +66,16 @@ namespace Engine3D_Tests
         {
             // a million rays takes ~300ms in Release mode; ~650ms in Debug mode (all with laptop on Power Saver mode)
 #if DEBUG
-            const double minMillionRaysPerSec = 1.4;
+            const double minMillionRaysPerSec = 0.9;
             const double maxMillionRaysPerSec = 1.7;
-#else
+#elif APPVEYOR_PERFORMANCE_MARGINS
             // AppVeyor build server
             const double minMillionRaysPerSec = 7.9;
             const double maxMillionRaysPerSec = 10.8;
-
-            // my laptop on Power Saver mode
-            //const double minMillionRaysPerSec = 2.7;
-            //const double maxMillionRaysPerSec = 3.1;
+#else
+            // my laptop in High Performance mode
+            const double minMillionRaysPerSec = 4.0;
+            const double maxMillionRaysPerSec = 6.0;
 #endif
 
             const int numRays = 1000000;
@@ -104,16 +105,16 @@ namespace Engine3D_Tests
         {
             // a million rays takes ~300ms in Release mode; ~850ms in Debug mode (all with laptop on Power Saver mode)
 #if DEBUG
-            const double minMillionRaysPerSec = 1.1;
+            const double minMillionRaysPerSec = 0.7;
             const double maxMillionRaysPerSec = 1.3;
-#else
+#elif APPVEYOR_PERFORMANCE_MARGINS
             // AppVeyor build server
             const double minMillionRaysPerSec = 7.9;
             const double maxMillionRaysPerSec = 12.9;
-
-            // my laptop on Power Saver mode
-            //const double minMillionRaysPerSec = 3.0;
-            //const double maxMillionRaysPerSec = 3.7;
+#else
+            // my laptop in High Performance mode
+            const double minMillionRaysPerSec = 4.5;
+            const double maxMillionRaysPerSec = 7.1;
 #endif
 
             const int numRays = 1000000;
@@ -146,16 +147,16 @@ namespace Engine3D_Tests
             // TODO: this only tests the case of ray hitting the sphere. Also test performance of misses and near-misses, or aggregate performance.
 #if DEBUG
             // TODO
-            const double minMillionRaysPerSec = 0.70;
-            const double maxMillionRaysPerSec = 1.15;
-#else
+            const double minMillionRaysPerSec = 0.9;
+            const double maxMillionRaysPerSec = 1.3;
+#elif APPVEYOR_PERFORMANCE_MARGINS
             // AppVeyor build server
             const double minMillionRaysPerSec = 3.9;
             const double maxMillionRaysPerSec = 5.9;
-
-            // my laptop on Power Saver mode
-            //const double minMillionRaysPerSec = 1.7;
-            //const double maxMillionRaysPerSec = 2.0;
+#else
+            // my laptop in High Performance mode
+            const double minMillionRaysPerSec = 3.5;
+            const double maxMillionRaysPerSec = 4.5;
 #endif
 
             const int numRays = 1000000;
@@ -186,16 +187,16 @@ namespace Engine3D_Tests
         {
 #if DEBUG
             // TODO
-            const double minMillionRaysPerSec = ?
-            const double maxMillionRaysPerSec = ?;
-#else
+            const double minMillionRaysPerSec = 0.7;
+            const double maxMillionRaysPerSec = 1.0;
+#elif APPVEYOR_PERFORMANCE_MARGINS
             // AppVeyor build server
             const double minMillionRaysPerSec = 3.9;
             const double maxMillionRaysPerSec = 5.9;
-
+#else
             // my laptop on Power Saver mode
-            //const double minMillionRaysPerSec = 2.0;
-            //const double maxMillionRaysPerSec = 3.0;
+            const double minMillionRaysPerSec = 3.0;
+            const double maxMillionRaysPerSec = 4.1;
 #endif
 
             const int numRays = 1000000;
@@ -226,16 +227,16 @@ namespace Engine3D_Tests
         {
 #if DEBUG
             // TODO
-            const double minMillionRaysPerSec = ?;
-            const double maxMillionRaysPerSec = ?;
-#else
+            const double minMillionRaysPerSec = 1.8;
+            const double maxMillionRaysPerSec = 2.9;
+#elif APPVEYOR_PERFORMANCE_MARGINS
             // AppVeyor build server
             const double minMillionRaysPerSec = 8.5;
             const double maxMillionRaysPerSec = 11.0;
-
-            // my laptop on Power Saver mode
-            //const double minMillionRaysPerSec = 4.5;
-            //const double maxMillionRaysPerSec = 5.5;
+#else
+            // my laptop in High Performance mode
+            const double minMillionRaysPerSec = 4.5;
+            const double maxMillionRaysPerSec = 8.0;
 #endif
 
             const int numRays = 1000000;
@@ -262,16 +263,16 @@ namespace Engine3D_Tests
         {
             // a million rays takes ~900ms in Release mode; ~4s in Debug mode (all with laptop on Power Saver mode)
 #if DEBUG
-            const double minMillionRaysPerSec = 0.50;
+            const double minMillionRaysPerSec = 0.35;
             const double maxMillionRaysPerSec = 0.55;
-#else
+#elif APPVEYOR_PERFORMANCE_MARGINS
             // AppVeyor build server
             const double minMillionRaysPerSec = 2.9;
             const double maxMillionRaysPerSec = 3.8;
-
-            // my laptop on Power Saver mode
-            //const double minMillionRaysPerSec = 0.9;
-            //const double maxMillionRaysPerSec = 1.2;
+#else
+            // my laptop in High Performance mode
+            const double minMillionRaysPerSec = 1.2;
+            const double maxMillionRaysPerSec = 2.5;
 #endif
 
             const int numRays = 1000000;
