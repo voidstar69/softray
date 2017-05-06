@@ -186,16 +186,16 @@ namespace Engine3D_Tests
         {
 #if DEBUG
             // TODO
-            const double minMillionRaysPerSec = 0.70;
-            const double maxMillionRaysPerSec = 1.15;
+            const double minMillionRaysPerSec = ?
+            const double maxMillionRaysPerSec = ?;
 #else
             // AppVeyor build server
             const double minMillionRaysPerSec = 3.9;
             const double maxMillionRaysPerSec = 5.9;
 
             // my laptop on Power Saver mode
-            //const double minMillionRaysPerSec = 1.7;
-            //const double maxMillionRaysPerSec = 2.0;
+            //const double minMillionRaysPerSec = 2.0;
+            //const double maxMillionRaysPerSec = 3.0;
 #endif
 
             const int numRays = 1000000;
@@ -226,16 +226,16 @@ namespace Engine3D_Tests
         {
 #if DEBUG
             // TODO
-            const double minMillionRaysPerSec = 0.70;
-            const double maxMillionRaysPerSec = 1.15;
+            const double minMillionRaysPerSec = ?;
+            const double maxMillionRaysPerSec = ?;
 #else
             // AppVeyor build server
             const double minMillionRaysPerSec = 8.5;
-            const double maxMillionRaysPerSec = 10.0;
+            const double maxMillionRaysPerSec = 11.0;
 
             // my laptop on Power Saver mode
-            //const double minMillionRaysPerSec = 1.7;
-            //const double maxMillionRaysPerSec = 2.0;
+            //const double minMillionRaysPerSec = 4.5;
+            //const double maxMillionRaysPerSec = 5.5;
 #endif
 
             const int numRays = 1000000;
