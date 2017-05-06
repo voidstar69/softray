@@ -222,6 +222,45 @@ namespace Engine3D_Tests
         }
 
         [TestMethod]
+        public void BaselineTestOfPerformance()
+        {
+#if DEBUG
+            // TODO
+            const double minMillionRaysPerSec = 0.70;
+            const double maxMillionRaysPerSec = 1.15;
+#else
+            // AppVeyor build server
+            const double minMillionRaysPerSec = 3.9;
+            const double maxMillionRaysPerSec = 5.9;
+
+            // my laptop on Power Saver mode
+            //const double minMillionRaysPerSec = 1.7;
+            //const double maxMillionRaysPerSec = 2.0;
+#endif
+
+            const int numRays = 1000000;
+            var numRaysHit = 0;
+
+            DateTime startTime = DateTime.Now;
+            for (var i = 0; i < numRays; i++)
+            {
+                var start = MakeRandomVector(-10, 10, -10, 10, -10, 10);
+                var end = MakeRandomVector(1, 1, 1);
+                var dir = end - start;
+                var info = null;
+                if (info == null)
+                    numRaysHit++;
+            }
+            var elapsedTime = DateTime.Now - startTime;
+            Assert.AreEqual(numRays, numRaysHit, "Num rays hit {0} should the same as total rays {1}", numRaysHit, numRays);
+            //Assert.IsTrue(numRays * 0.498 < numRaysHit && numRaysHit < numRays * 0.502, "Num rays hit {0} should be roughly half of total rays {1}", numRaysHit, numRays);
+            var millionRaysPerSec = numRays / 1000000.0 / elapsedTime.TotalSeconds;
+            Assert.IsTrue(minMillionRaysPerSec < millionRaysPerSec && millionRaysPerSec < maxMillionRaysPerSec,
+                "Rays per second {0:f2} not between {1} and {2} (millions)", millionRaysPerSec, minMillionRaysPerSec, maxMillionRaysPerSec);
+            Console.WriteLine("Performance: {0} million rays per second", millionRaysPerSec);
+        }
+
+        [TestMethod]
         public void RayIntersectAABBPerformance()
         {
             // a million rays takes ~900ms in Release mode; ~4s in Debug mode (all with laptop on Power Saver mode)
