@@ -247,7 +247,7 @@ namespace Engine3D_Tests
                 var start = MakeRandomVector(-10, 10, -10, 10, -10, 10);
                 var end = MakeRandomVector(1, 1, 1);
                 var dir = end - start;
-                var info = null;
+                IntersectionInfo info = null;
                 if (info == null)
                     numRaysHit++;
             }
