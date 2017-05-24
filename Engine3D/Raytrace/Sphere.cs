@@ -8,11 +8,13 @@ namespace Engine3D.Raytrace
         private const double epsilon = 1e-10;
         private readonly Vector center;
         private readonly double radius;
+        private readonly double radiusSqr;
 
         [ContractInvariantMethod]
         private void ClassContract()
         {
             Contract.Invariant(radius > 0);
+            Contract.Invariant(Math.Abs(radius * radius - radiusSqr) < epsilon);
         }
 
         /// <summary>
@@ -25,6 +27,7 @@ namespace Engine3D.Raytrace
             Contract.Requires(radius > 0);
             this.center = center;
             this.radius = radius;
+            this.radiusSqr = radius * radius;
             this.Color = Color.White;
         }
 
@@ -53,7 +56,7 @@ namespace Engine3D.Raytrace
         [Pure]
         public bool ContainsPoint(Vector pt)
         {
-            return (pt - center).LengthSqr < radius * radius;
+            return (pt - center).LengthSqr < radiusSqr;
         }
 
         /// <summary>
@@ -81,7 +84,7 @@ namespace Engine3D.Raytrace
             var sphereToStart = linePt1 - center; // o - c
             var sphereToStartProjDir = sphereToStart.DotProduct(dir); // l.(o - c)
             var sphereToStartDistSqr = sphereToStart.LengthSqr; // |o - c|^2
-            var termUnderSqrRoot = sphereToStartProjDir * sphereToStartProjDir - sphereToStartDistSqr + radius * radius; // (l.(o - c))^2 - |o - c|^2 + r^2
+            var termUnderSqrRoot = sphereToStartProjDir * sphereToStartProjDir - sphereToStartDistSqr + radiusSqr; // (l.(o - c))^2 - |o - c|^2 + r^2
             if (termUnderSqrRoot < epsilon) // use epsilon to avoid unstable pixels flickering between one root and zero roots
             {
                 // line does not intersect sphere (or line touches sphere at exactly one point)
@@ -151,28 +154,45 @@ namespace Engine3D.Raytrace
             // TODO: optimise ray-sphere intersection code
 
             // Make dir a unit vector.
-            // TODO: not strictly neccessary, but it makes the quadratic equation a bit simpler
+            // TODO: not strictly neccessary, but it makes the quadratic equation a bit simpler.
+            // TODO: make this function faster by removing the normalise, and accounting for sphereToStartProjDir
+            // being scaled up by the length of dir.
             dir.Normalise();
 
             // Solve quadratic equation to determine number of intersection points between (infinite) line and sphere: 0, 1 or 2 intersections
-            var sphereToStart = start - center; // o - c
-            var sphereToStartProjDir = sphereToStart.DotProduct(dir); // l.(o - c)
-            var sphereToStartDistSqr = sphereToStart.LengthSqr; // |o - c|^2
-            var termUnderSqrRoot = sphereToStartProjDir * sphereToStartProjDir - sphereToStartDistSqr + radius * radius; // (l.(o - c))^2 - |o - c|^2 + r^2
+            Vector sphereToStart = start - center; // o - c
+            double sphereToStartProjDir = sphereToStart.DotProduct(dir); // l.(o - c)
+
+            // Is the entire sphere behind the start of the ray?
+            if(sphereToStartProjDir > radius)
+                return null;
+
+            double sphereToStartDistSqr = sphereToStart.LengthSqr; // |o - c|^2
+
+            // TODO: ignore rays starting inside the sphere?
+            // Is any part of the sphere behind the start of the ray?
+//            if(sphereToStartProjDir > -radius)
+//                return null;
+            // Is the sphere surrounding the ray start? TODO: is this ever true after the previous check?
+//            if(sphereToStartDistSqr < radiusSqr)
+//                return null;
+
+            double termUnderSqrRoot = sphereToStartProjDir * sphereToStartProjDir - sphereToStartDistSqr + radiusSqr; // (l.(o - c))^2 - |o - c|^2 + r^2
             if (termUnderSqrRoot < epsilon) // use epsilon to avoid unstable pixels flickering between one root and zero roots
                 // (infinite) line does not intersect sphere
                 return null;
+ 
+            double positiveSqrRoot = Math.Sqrt(termUnderSqrRoot);
+            double intersectRayFrac1 = -sphereToStartProjDir - positiveSqrRoot; // distance along line from ray-start to first intersection
+            double intersectRayFrac2 = -sphereToStartProjDir + positiveSqrRoot; // distance along line from ray-start to second intersection (might be same as first intersection)
 
-            var positiveSqrRoot = Math.Sqrt(termUnderSqrRoot);
-            var intersectRayFrac1 = -sphereToStartProjDir - positiveSqrRoot; // distance along line from ray-start to first intersection
-            var intersectRayFrac2 = -sphereToStartProjDir + positiveSqrRoot; // distance along line from ray-start to second intersection (might be same as first intersection)
-
-            var rayFrac = (intersectRayFrac1 >= 0 ? intersectRayFrac1 : intersectRayFrac2);
+            double rayFrac = (intersectRayFrac1 >= 0 ? intersectRayFrac1 : intersectRayFrac2);
             if (rayFrac < 0)
                 // (infinite) line intersects sphere, but ray does not
                 return null;
 
             // Determine details of nearest intersection point
+            // TODO: rearchitect to avoid calculating intersection position and normal unless this is the first object hit
             IntersectionInfo info = new IntersectionInfo();
             info.rayFrac = rayFrac;
             info.pos = start + dir * rayFrac;
