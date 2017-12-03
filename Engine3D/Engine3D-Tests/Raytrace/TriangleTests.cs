@@ -228,7 +228,7 @@ namespace Engine3D_Tests
             const double maxMillionRaysPerSec = ?;
 #elif APPVEYOR_PERFORMANCE_MARGINS
             // AppVeyor build server
-            const double minMillionRaysPerSec = 7.5;
+            const double minMillionRaysPerSec = 6.0;
             const double maxMillionRaysPerSec = 8.5;
 #else
             // my laptop on Power Saver mode
@@ -256,6 +256,7 @@ namespace Engine3D_Tests
             Assert.IsTrue(minMillionRaysPerSec < millionRaysPerSec && millionRaysPerSec < maxMillionRaysPerSec,
                 "Rays per second {0:f2} not between {1} and {2} (millions)", millionRaysPerSec, minMillionRaysPerSec, maxMillionRaysPerSec);
             Console.WriteLine("Performance: {0} million rays per second", millionRaysPerSec);
+            Console.WriteLine($"Num rays hit: {numRaysHit} / {numRays}");
         }
 
         [TestMethod]
@@ -267,7 +268,7 @@ namespace Engine3D_Tests
             const double maxMillionRaysPerSec = 2.9;
 #elif APPVEYOR_PERFORMANCE_MARGINS
             // AppVeyor build server
-            const double minMillionRaysPerSec = 10.0;
+            const double minMillionRaysPerSec = 9.0;
             const double maxMillionRaysPerSec = 13.0;
 #else
             // my laptop in High Performance mode
