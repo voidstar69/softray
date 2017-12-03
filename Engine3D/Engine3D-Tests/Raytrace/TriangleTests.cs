@@ -256,7 +256,7 @@ namespace Engine3D_Tests
             Assert.IsTrue(minMillionRaysPerSec < millionRaysPerSec && millionRaysPerSec < maxMillionRaysPerSec,
                 "Rays per second {0:f2} not between {1} and {2} (millions)", millionRaysPerSec, minMillionRaysPerSec, maxMillionRaysPerSec);
             Console.WriteLine("Performance: {0} million rays per second", millionRaysPerSec);
-            Console.WriteLine($"Num rays hit: {numRaysHit} / {numRays}");
+            Console.WriteLine("Num rays hit: {0} / {1}", numRaysHit, numRays);
         }
 
         [TestMethod]
