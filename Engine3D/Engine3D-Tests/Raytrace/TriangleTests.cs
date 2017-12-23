@@ -154,17 +154,15 @@ namespace Engine3D_Tests
         [TestMethod]
         public void RayIntersectSphereFromInside_Performance()
         {
-            // TODO: a million rays takes ~500ms in Release mode; ~1s in Debug mode (all with laptop on Power Saver mode)
             // TODO: optimise ray-sphere intersection code
             // TODO: this only tests the case of ray hitting the sphere. Also test performance of misses and near-misses, or aggregate performance.
 #if DEBUG
-            // TODO
             const double minMillionRaysPerSec = 0.9;
             const double maxMillionRaysPerSec = 1.3;
 #elif APPVEYOR_PERFORMANCE_MARGINS
             // AppVeyor build server
-            const double minMillionRaysPerSec = 3.9;
-            const double maxMillionRaysPerSec = 5.9;
+            const double minMillionRaysPerSec = 5.0;
+            const double maxMillionRaysPerSec = 7.0;
 #else
             // my laptop in High Performance mode
             const double minMillionRaysPerSec = 3.5;
@@ -226,12 +224,51 @@ namespace Engine3D_Tests
                     numRaysHit++;
             }
             var elapsedTime = DateTime.Now - startTime;
-            Assert.AreEqual(numRays, numRaysHit, "Num rays hit {0} should the same as total rays {1}", numRaysHit, numRays);
+            Assert.AreEqual(numRays, numRaysHit, "Num rays hit {0} should be the same as total rays {1}", numRaysHit, numRays);
             //Assert.IsTrue(numRays * 0.498 < numRaysHit && numRaysHit < numRays * 0.502, "Num rays hit {0} should be roughly half of total rays {1}", numRaysHit, numRays);
             var millionRaysPerSec = numRays / 1000000.0 / elapsedTime.TotalSeconds;
             Assert.IsTrue(minMillionRaysPerSec < millionRaysPerSec && millionRaysPerSec < maxMillionRaysPerSec,
                 "Rays per second {0:f2} not between {1} and {2} (millions)", millionRaysPerSec, minMillionRaysPerSec, maxMillionRaysPerSec);
             Console.WriteLine("Performance: {0} million rays per second", millionRaysPerSec);
+        }
+
+        [TestMethod]
+        public void RayIntersectSphereRandomly_Performance()
+        {
+#if DEBUG
+            const double minMillionRaysPerSec = ?;
+            const double maxMillionRaysPerSec = ?;
+#elif APPVEYOR_PERFORMANCE_MARGINS
+            // AppVeyor build server
+            const double minMillionRaysPerSec = 6.0;
+            const double maxMillionRaysPerSec = 8.5;
+#else
+            // my laptop on Power Saver mode
+            const double minMillionRaysPerSec = ?;
+            const double maxMillionRaysPerSec = ?;
+#endif
+
+            const int numRays = 1000000;
+            var sphere = new Sphere(new Vector(0, 0, 0), 1);
+            var numRaysHit = 0;
+
+            DateTime startTime = DateTime.Now;
+            for (var i = 0; i < numRays; i++)
+            {
+                var start = MakeRandomVector(-2, 2, -2, 2, -2, 2);
+                var dir = MakeRandomVector(-1, 1, -1, 1, -1, 1);
+                var info = sphere.IntersectRay(start, dir, context);
+                if (info != null)
+                    numRaysHit++;
+            }
+            var elapsedTime = DateTime.Now - startTime;
+            //Assert.AreEqual(numRays, numRaysHit, "Num rays hit {0} should be the same as total rays {1}", numRaysHit, numRays);
+            //Assert.IsTrue(numRays * 0.498 < numRaysHit && numRaysHit < numRays * 0.502, "Num rays hit {0} should be roughly half of total rays {1}", numRaysHit, numRays);
+            var millionRaysPerSec = numRays / 1000000.0 / elapsedTime.TotalSeconds;
+            Assert.IsTrue(minMillionRaysPerSec < millionRaysPerSec && millionRaysPerSec < maxMillionRaysPerSec,
+                "Rays per second {0:f2} not between {1} and {2} (millions)", millionRaysPerSec, minMillionRaysPerSec, maxMillionRaysPerSec);
+            Console.WriteLine("Performance: {0} million rays per second", millionRaysPerSec);
+            Console.WriteLine("Num rays hit: {0} / {1}", numRaysHit, numRays);
         }
 
         [TestMethod]
@@ -243,8 +280,8 @@ namespace Engine3D_Tests
             const double maxMillionRaysPerSec = 2.9;
 #elif APPVEYOR_PERFORMANCE_MARGINS
             // AppVeyor build server
-            const double minMillionRaysPerSec = 8.5;
-            const double maxMillionRaysPerSec = 11.0;
+            const double minMillionRaysPerSec = 9.0;
+            const double maxMillionRaysPerSec = 13.0;
 #else
             // my laptop in High Performance mode
             const double minMillionRaysPerSec = 4.5;
