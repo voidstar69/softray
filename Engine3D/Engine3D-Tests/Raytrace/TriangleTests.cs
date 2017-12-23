@@ -1,4 +1,4 @@
-﻿//#define APPVEYOR_PERFORMANCE_MARGINS
+﻿#define APPVEYOR_PERFORMANCE_MARGINS
 
 using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -19,16 +19,16 @@ namespace Engine3D_Tests
         private readonly static Random random = new Random();
         private readonly static RenderContext context = new RenderContext(random);
 
-        private const int numRandomDoubles = 123;
-        private readonly double[] randomDouble = new double[numRandomDoubles];
-        private int randomIndex = 0;
+        //private const int numRandomDoubles = 123;
+        //private readonly double[] randomDouble = new double[numRandomDoubles];
+        //private int randomIndex = 0;
 
         public TriangleTests()
         {
-            for (var i = 0; i < numRandomDoubles; i++)
-            {
-                randomDouble[i] = random.NextDouble();
-            }
+            //for (var i = 0; i < numRandomDoubles; i++)
+            //{
+            //    randomDouble[i] = random.NextDouble();
+            //}
         }
 
         [TestMethod]
@@ -71,6 +71,42 @@ namespace Engine3D_Tests
             var tri = new Triangle(origin, right, up, color);
             var info = tri.IntersectRay(origin + forward, backward, context);
             Assert.IsNull(info);
+        }
+
+        [TestMethod]
+        public void BaselineTestOfPerformance()
+        {
+#if DEBUG
+            // TODO
+            const double minMillionRaysPerSec = 1.8;
+            const double maxMillionRaysPerSec = 2.9;
+#elif APPVEYOR_PERFORMANCE_MARGINS
+            // AppVeyor build server
+            const double minMillionRaysPerSec = 9.0;
+            const double maxMillionRaysPerSec = 13.0;
+#else
+          // my laptop in High Performance mode
+          const double minMillionRaysPerSec = 4.5;
+          const double maxMillionRaysPerSec = 8.0;
+#endif
+
+          const int numRays = 1000000;
+          var numRaysHit = 0;
+
+          DateTime startTime = DateTime.Now;
+          for (var i = 0; i < numRays; i++)
+          {
+            var start = MakeRandomVector(-10, 10, -10, 10, -10, 10);
+            var dir = MakeRandomVector(1, 1, 1);
+            var info = new IntersectionInfo();
+            if (info != null)
+              numRaysHit++;
+          }
+          var elapsedTime = DateTime.Now - startTime;
+          var millionRaysPerSec = numRays / 1000000.0 / elapsedTime.TotalSeconds;
+          Assert.IsTrue(minMillionRaysPerSec < millionRaysPerSec && millionRaysPerSec < maxMillionRaysPerSec,
+              "Rays per second {0:f2} not between {1} and {2} (millions)", millionRaysPerSec, minMillionRaysPerSec, maxMillionRaysPerSec);
+          Console.WriteLine("Performance: {0} million rays per second", millionRaysPerSec);
         }
 
         [TestMethod]
@@ -165,8 +201,8 @@ namespace Engine3D_Tests
             const double maxMillionRaysPerSec = 7.0;
 #else
             // my laptop in High Performance mode
-            const double minMillionRaysPerSec = 3.5;
-            const double maxMillionRaysPerSec = 4.5;
+            const double minMillionRaysPerSec = 3.0;
+            const double maxMillionRaysPerSec = 3.6;
 #endif
 
             const int numRays = 1000000;
@@ -204,8 +240,8 @@ namespace Engine3D_Tests
             const double minMillionRaysPerSec = 3.9;
             const double maxMillionRaysPerSec = 5.9;
 #else
-            // my laptop on Power Saver mode
-            const double minMillionRaysPerSec = 3.0;
+            // my laptop in High Performance mode
+            const double minMillionRaysPerSec = 2.8;
             const double maxMillionRaysPerSec = 4.1;
 #endif
 
@@ -243,9 +279,9 @@ namespace Engine3D_Tests
             const double minMillionRaysPerSec = 6.0;
             const double maxMillionRaysPerSec = 8.5;
 #else
-            // my laptop on Power Saver mode
-            const double minMillionRaysPerSec = ?;
-            const double maxMillionRaysPerSec = ?;
+            // my laptop in High Performance mode
+            const double minMillionRaysPerSec = 4.3;
+            const double maxMillionRaysPerSec = 5.6;
 #endif
 
             const int numRays = 1000000;
@@ -269,42 +305,6 @@ namespace Engine3D_Tests
                 "Rays per second {0:f2} not between {1} and {2} (millions)", millionRaysPerSec, minMillionRaysPerSec, maxMillionRaysPerSec);
             Console.WriteLine("Performance: {0} million rays per second", millionRaysPerSec);
             Console.WriteLine("Num rays hit: {0} / {1}", numRaysHit, numRays);
-        }
-
-        [TestMethod]
-        public void BaselineTestOfPerformance()
-        {
-#if DEBUG
-            // TODO
-            const double minMillionRaysPerSec = 1.8;
-            const double maxMillionRaysPerSec = 2.9;
-#elif APPVEYOR_PERFORMANCE_MARGINS
-            // AppVeyor build server
-            const double minMillionRaysPerSec = 9.0;
-            const double maxMillionRaysPerSec = 13.0;
-#else
-            // my laptop in High Performance mode
-            const double minMillionRaysPerSec = 4.5;
-            const double maxMillionRaysPerSec = 8.0;
-#endif
-
-            const int numRays = 1000000;
-            var numRaysHit = 0;
-
-            DateTime startTime = DateTime.Now;
-            for (var i = 0; i < numRays; i++)
-            {
-                var start = MakeRandomVector(-10, 10, -10, 10, -10, 10);
-                var dir = MakeRandomVector(1, 1, 1);
-                var info = new IntersectionInfo();
-                if (info != null)
-                    numRaysHit++;
-            }
-            var elapsedTime = DateTime.Now - startTime;
-            var millionRaysPerSec = numRays / 1000000.0 / elapsedTime.TotalSeconds;
-            Assert.IsTrue(minMillionRaysPerSec < millionRaysPerSec && millionRaysPerSec < maxMillionRaysPerSec,
-                "Rays per second {0:f2} not between {1} and {2} (millions)", millionRaysPerSec, minMillionRaysPerSec, maxMillionRaysPerSec);
-            Console.WriteLine("Performance: {0} million rays per second", millionRaysPerSec);
         }
 
         [TestMethod]
@@ -364,9 +364,9 @@ namespace Engine3D_Tests
         {
             return random.NextDouble();
 
-            var result = randomDouble[randomIndex];
-            randomIndex = (randomIndex + 1) % numRandomDoubles;
-            return result;
+            //var result = randomDouble[randomIndex];
+            //randomIndex = (randomIndex + 1) % numRandomDoubles;
+            //return result;
         }
     }
 }
