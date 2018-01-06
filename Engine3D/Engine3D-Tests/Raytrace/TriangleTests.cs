@@ -77,9 +77,9 @@ namespace Engine3D_Tests
         public void BaselineTestOfPerformance()
         {
 #if DEBUG
-            // TODO
-            const double minMillionRaysPerSec = 1.8;
-            const double maxMillionRaysPerSec = 2.9;
+            // my laptop in High Performance mode
+            const double minMillionRaysPerSec = 2.5;
+            const double maxMillionRaysPerSec = 3.4;
 #elif APPVEYOR_PERFORMANCE_MARGINS
             // AppVeyor build server
             const double minMillionRaysPerSec = 9.0;
@@ -113,8 +113,9 @@ namespace Engine3D_Tests
         public void RayIntersectPlanePerformance()
         {
 #if DEBUG
+            // my laptop in High Performance mode
             const double minMillionRaysPerSec = 0.9;
-            const double maxMillionRaysPerSec = 1.7;
+            const double maxMillionRaysPerSec = 1.8;
 #elif APPVEYOR_PERFORMANCE_MARGINS
             // AppVeyor build server
             const double minMillionRaysPerSec = 7.9;
@@ -191,7 +192,8 @@ namespace Engine3D_Tests
             // TODO: optimise ray-sphere intersection code
             // TODO: this only tests the case of ray hitting the sphere. Also test performance of misses and near-misses, or aggregate performance.
 #if DEBUG
-            const double minMillionRaysPerSec = 0.9;
+            // my laptop in High Performance mode
+            const double minMillionRaysPerSec = 0.8;
             const double maxMillionRaysPerSec = 1.3;
 #elif APPVEYOR_PERFORMANCE_MARGINS
             // AppVeyor build server
@@ -230,8 +232,8 @@ namespace Engine3D_Tests
         public void RayIntersectSphereMostlyFromOutside_Performance()
         {
 #if DEBUG
-            // TODO
-            const double minMillionRaysPerSec = 0.7;
+            // my laptop in High Performance mode
+            const double minMillionRaysPerSec = 0.6;
             const double maxMillionRaysPerSec = 1.0;
 #elif APPVEYOR_PERFORMANCE_MARGINS
             // AppVeyor build server
@@ -270,8 +272,9 @@ namespace Engine3D_Tests
         public void RayIntersectSphereRandomly_Performance()
         {
 #if DEBUG
-            const double minMillionRaysPerSec = ?;
-            const double maxMillionRaysPerSec = ?;
+            // my laptop in High Performance mode
+            const double minMillionRaysPerSec = 0.9;
+            const double maxMillionRaysPerSec = 1.2;
 #elif APPVEYOR_PERFORMANCE_MARGINS
             // AppVeyor build server
             const double minMillionRaysPerSec = 6.0;
@@ -308,9 +311,9 @@ namespace Engine3D_Tests
         [TestMethod]
         public void RayIntersectAABBPerformance()
         {
-            // a million rays takes ~900ms in Release mode; ~4s in Debug mode (all with laptop on Power Saver mode)
 #if DEBUG
-            const double minMillionRaysPerSec = 0.35;
+            // my laptop in High Performance mode
+            const double minMillionRaysPerSec = 0.32;
             const double maxMillionRaysPerSec = 0.55;
 #elif APPVEYOR_PERFORMANCE_MARGINS
             // AppVeyor build server

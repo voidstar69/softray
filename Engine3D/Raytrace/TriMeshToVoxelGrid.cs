@@ -7,30 +7,6 @@ namespace Engine3D.Raytrace
 {
     public class TriMeshToVoxelGrid
     {
-        static private List<Raytrace.Triangle> FindTrianglesInsidePlanes(List<Raytrace.Triangle> tris, List<Plane> planes)
-        {
-            var newTris = new List<Raytrace.Triangle>();
-            foreach (var tri in tris)
-            {
-                bool triInside = true;
-                foreach (var plane in planes)
-                {
-                    PlaneHalfSpace side = tri.IntersectPlane(plane);
-                    if ((side & PlaneHalfSpace.NormalSide) == 0)
-                    {
-                        triInside = false;
-                        break;
-                    }
-                }
-
-                if (triInside)
-                {
-                    newTris.Add(tri);
-                }
-            }
-            return newTris;
-        }
-
         /// <summary>
         /// Convert a list of triangles into a grid of voxels.
         /// </summary>
@@ -75,9 +51,22 @@ namespace Engine3D.Raytrace
 //                        uint color = (trisInCell.Count == 0 ? 0 : 0xff00ff00);
 
                         // Pick color of first triangle in cell
-                        uint color = (trisInCell.Count == 0 ? 0 : trisInCell[0].Color);
+//                        uint color = (trisInCell.Count == 0 ? 0 : trisInCell[0].Color);
 
-                        voxels[x, y, z] = color;
+                        // Average colors of all triangles in cell
+                        uint cellColor = 0;
+                        if (trisInCell.Count > 0)
+                        {
+                            Color color = Color.Black;
+                            foreach (var tri in trisInCell)
+                            {
+                                color += new Color(tri.Color);
+                            }
+                            color /= trisInCell.Count;
+                            cellColor = color.ToARGB();
+                        }
+
+                        voxels[x, y, z] = cellColor;
                     }
                 }
             }
@@ -101,6 +90,30 @@ namespace Engine3D.Raytrace
 */
 
             return voxels;
+        }
+
+        static private List<Raytrace.Triangle> FindTrianglesInsidePlanes(List<Raytrace.Triangle> tris, List<Plane> planes)
+        {
+            var newTris = new List<Raytrace.Triangle>();
+            foreach (var tri in tris)
+            {
+                bool triInside = true;
+                foreach (var plane in planes)
+                {
+                    PlaneHalfSpace side = tri.IntersectPlane(plane);
+                    if ((side & PlaneHalfSpace.NormalSide) == 0)
+                    {
+                        triInside = false;
+                        break;
+                    }
+                }
+
+                if (triInside)
+                {
+                    newTris.Add(tri);
+                }
+            }
+            return newTris;
         }
     }
 }

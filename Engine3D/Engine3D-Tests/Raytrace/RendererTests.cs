@@ -281,7 +281,7 @@ namespace Engine3D_Tests
         public void RaytraceVoxelGrid()
         {
             objectDepth = 4.0;
-            RaytraceScenario(pitchDegrees: -45, yawDegrees: 45, rollDegrees: 30, voxels: true);
+            RaytraceScenario(voxels: true);
 
             if (numMissingBaselines > 0)
                 Assert.Fail("{0} missing baseline images were recreated", numMissingBaselines);
@@ -293,8 +293,8 @@ namespace Engine3D_Tests
         public void RaytraceVoxelGridWithOtherObject()
         {
             modelFileName = "../../obj2.3ds";
-            objectDepth = 4.0;
-            RaytraceScenario(pitchDegrees: 0, yawDegrees: 135, rollDegrees: 0, voxels: true, shading: false);
+            objectDepth = 3.0;
+            RaytraceScenario(pitchDegrees: 0, yawDegrees: 170, rollDegrees: 0, voxels: true, shading: false);
 
             if (numMissingBaselines > 0)
                 Assert.Fail("{0} missing baseline images were recreated", numMissingBaselines);

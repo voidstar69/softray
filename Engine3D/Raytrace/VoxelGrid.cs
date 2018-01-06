@@ -44,26 +44,28 @@ namespace Engine3D.Raytrace
             start = (start * 0.5 + half) * ((double)gridSize - 0.001);
             end = (end * 0.5 + half) * ((double)gridSize - 0.001);
 
+            int oldX = -1, oldY = -1, oldZ = -1;
+
             // TODO: a larger minStep (e.g. 1) makes the voxels look like thin squares facing a single direction. Why?
             foreach (var pos in LineWalker3D.WalkLine(start, end, 0.1))
             {
                 int x = (int)pos.x;
                 var y = (int)pos.y;
                 var z = (int)pos.z;
+                Contract.Assert(x >= 0 && x < gridSize && y >= 0 && y < gridSize && z >= 0 && z < gridSize);
 
-                if (x >= 0 && x < gridSize &&
-                    y >= 0 && y < gridSize &&
-                    z >= 0 && z < gridSize)
+                if (x != oldX && y != oldY && z != oldZ)
                 {
-                    //var voxelIndex = (x * gridSize * gridSize) + (y * gridSize) + z;
-                    //Voxel sample = voxels[voxelIndex];
                     Voxel sample = voxels[x,y,z];
 
                     // Treat black voxels as transparent
                     if (sample != 0)
                     {
-                        // TODO: convert sample to a colour, and return it along with rayFrac, pos and normal
-                        return new IntersectionInfo { color = sample, normal = Vector.Up };
+                        var normal = new Vector(oldX - x, oldY - y, oldZ - z);
+                        normal.Normalise();
+
+                        // TODO: also return correct rayFrac, pos and normal
+                        return new IntersectionInfo { color = sample, normal = normal };
                         //return new IntersectionInfo { color = sample, pos = pos, rayFrac = (pos - start).Length, normal = Vector.Up };
                     }
                 }

@@ -1558,6 +1558,27 @@ namespace Engine3D
 */
             }
 
+            if (rayTraceVoxels)
+            {
+                const int voxelGridSize = 64;
+
+                // Copy the triangles from the simply geometry into a list
+                var triList = new List<Raytrace.Triangle>();
+                for (int i = 0; i < geometry_simple.Count; i++)
+                {
+                    var tri = (Raytrace.Triangle)geometry_simple[i];
+                    triList.Add(tri);
+                }
+
+                var voxelData = TriMeshToVoxelGrid.Convert(triList, voxelGridSize);
+
+                //var geometryGroup = new GeometryCollection();
+                //geometryGroup.Add(new VoxelGrid(voxelGridSize, voxelData));
+                //rootGeometry = geometryGroup;
+
+                rootGeometry = new VoxelGrid(voxelGridSize, voxelData);
+            }
+
             if (lightFieldTriMethod == null)
             {
                 // Ensure that we have a list of triangles to index into, and that every triangle has an index assigned
@@ -1618,60 +1639,6 @@ namespace Engine3D
                 rootGeometry = lightFieldColorMethod;
             }
             lightFieldColorMethod.Enabled = rayTraceLightField && !lightFieldHasTris;
-
-            // TODO: test Voxel geometry
-            if (rayTraceVoxels)
-            {
-                const int voxelGridSize = 128;
-
-                // Copy the triangles from the simply geometry into a list
-                var triList = new List<Raytrace.Triangle>();
-                for (int i = 0; i < geometry_simple.Count; i++)
-                {
-                    var tri = (Raytrace.Triangle)geometry_simple[i];
-                    triList.Add(tri);
-                }
-
-//                var y = from x in geometry_simple select x;
-
-                var voxelData = TriMeshToVoxelGrid.Convert(triList, voxelGridSize);
-
-
-
-                // Create a box bounding the 3D triangle model.
-                //var boundingBox = new AxisAlignedBox(model.Min, model.Max);
-                //Vector epsilon = new Vector(1e-5, 1e-5, 1e-5);
-                //var boundingBox = new AxisAlignedBox(model.Min - epsilon, model.Max + epsilon);
-                //Assert.IsTrue(false, "{0} {1}", model.Min, model.Max);
-
-
-
-/*
-                var voxelData = new uint[voxelGridSize, voxelGridSize, voxelGridSize];
-                var random = new Random(rayTraceRandomSeed);
-
-                for (var x = 0; x < voxelGridSize; x++)
-                {
-                    for (var y = 0; y < voxelGridSize; y++)
-                    {
-                        for (var z = 0; z < voxelGridSize; z++)
-                        {
-                            // pick a random opaque color
-                            var color = (random.Next(2) == 0 ? 0 : (uint)random.Next() | 0xff000000);
-                            voxelData[x, y, z] = color;
-                        }
-                    }
-                }
-*/
-
-                var geometryGroup = new GeometryCollection();
-                //uint color1 = 0; //  Color.Red.ToARGB();
-                //uint color2 = Color.Green.ToARGB();
-                //geometryGroup.Add(new VoxelGrid(2, new uint[] { color1, color2, color1, color2, color1, color2, color1, color2 }));
-                geometryGroup.Add(new VoxelGrid(voxelGridSize, voxelData));
-                //geometryGroup.Add(rootGeometry);
-                rootGeometry = geometryGroup;
-            }
 
             // Ensure that we don't attempt to draw outside the 2D surface.
             rayTraceStartRow = Math.Min(Math.Max(0, rayTraceStartRow), height - 1);
