@@ -1622,7 +1622,31 @@ namespace Engine3D
             // TODO: test Voxel geometry
             if (rayTraceVoxels)
             {
-                const int voxelGridSize = 8;
+                const int voxelGridSize = 128;
+
+                // Copy the triangles from the simply geometry into a list
+                var triList = new List<Raytrace.Triangle>();
+                for (int i = 0; i < geometry_simple.Count; i++)
+                {
+                    var tri = (Raytrace.Triangle)geometry_simple[i];
+                    triList.Add(tri);
+                }
+
+//                var y = from x in geometry_simple select x;
+
+                var voxelData = TriMeshToVoxelGrid.Convert(triList, voxelGridSize);
+
+
+
+                // Create a box bounding the 3D triangle model.
+                //var boundingBox = new AxisAlignedBox(model.Min, model.Max);
+                //Vector epsilon = new Vector(1e-5, 1e-5, 1e-5);
+                //var boundingBox = new AxisAlignedBox(model.Min - epsilon, model.Max + epsilon);
+                //Assert.IsTrue(false, "{0} {1}", model.Min, model.Max);
+
+
+
+/*
                 var voxelData = new uint[voxelGridSize, voxelGridSize, voxelGridSize];
                 var random = new Random(rayTraceRandomSeed);
 
@@ -1638,6 +1662,7 @@ namespace Engine3D
                         }
                     }
                 }
+*/
 
                 var geometryGroup = new GeometryCollection();
                 //uint color1 = 0; //  Color.Red.ToARGB();

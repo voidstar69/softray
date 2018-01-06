@@ -275,13 +275,26 @@ namespace Engine3D_Tests
             RaytraceScenario(pathTracing: true, shading: false, focalBlur: true, focalDepth: depthOfFocus, subPixelRes: 8);
         }
 
-        // Release mode: ? min @ res 100
+        // Release mode: 1 seconds @ res 100
         // Debug mode with contracts: ? min @ res 100
         [TestMethod]
         public void RaytraceVoxelGrid()
         {
             objectDepth = 4.0;
             RaytraceScenario(pitchDegrees: -45, yawDegrees: 45, rollDegrees: 30, voxels: true);
+
+            if (numMissingBaselines > 0)
+                Assert.Fail("{0} missing baseline images were recreated", numMissingBaselines);
+        }
+
+        // Release mode: 1 seconds @ res 100
+        // Debug mode with contracts: ? min @ res 100
+        [TestMethod]
+        public void RaytraceVoxelGridWithOtherObject()
+        {
+            modelFileName = "../../obj2.3ds";
+            objectDepth = 4.0;
+            RaytraceScenario(pitchDegrees: 0, yawDegrees: 135, rollDegrees: 0, voxels: true, shading: false);
 
             if (numMissingBaselines > 0)
                 Assert.Fail("{0} missing baseline images were recreated", numMissingBaselines);
