@@ -41,15 +41,15 @@ namespace Engine3D.Raytrace
 
             // Scale up from (unit) object space to voxel grid resolution
             var half = new Vector(0.5, 0.5, 0.5);
-            start = (start + half) * (gridSize - 1);
-            end = (end + half) * (gridSize - 1);
+            start = (start * 0.5 + half) * ((double)gridSize - 0.001);
+            end = (end * 0.5 + half) * ((double)gridSize - 0.001);
 
             // TODO: a larger minStep (e.g. 1) makes the voxels look like thin squares facing a single direction. Why?
             foreach (var pos in LineWalker3D.WalkLine(start, end, 0.1))
             {
-                int x = (int)(pos.x + 0.5);
-                var y = (int)(pos.y + 0.5);
-                var z = (int)(pos.z + 0.5);
+                int x = (int)pos.x;
+                var y = (int)pos.y;
+                var z = (int)pos.z;
 
                 if (x >= 0 && x < gridSize &&
                     y >= 0 && y < gridSize &&

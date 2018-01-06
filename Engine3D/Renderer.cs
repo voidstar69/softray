@@ -1622,7 +1622,7 @@ namespace Engine3D
             // TODO: test Voxel geometry
             if (rayTraceVoxels)
             {
-                const int voxelGridSize = 4;
+                const int voxelGridSize = 8;
                 var voxelData = new uint[voxelGridSize, voxelGridSize, voxelGridSize];
                 var random = new Random(rayTraceRandomSeed);
 
@@ -1633,7 +1633,7 @@ namespace Engine3D
                         for (var z = 0; z < voxelGridSize; z++)
                         {
                             // pick a random opaque color
-                            var color = (/*random.Next(2) == 0 ? 0 : */(uint)random.Next() | 0xff000000);
+                            var color = (random.Next(2) == 0 ? 0 : (uint)random.Next() | 0xff000000);
                             voxelData[x, y, z] = color;
                         }
                     }
