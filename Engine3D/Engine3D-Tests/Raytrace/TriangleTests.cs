@@ -87,7 +87,7 @@ namespace Engine3D_Tests
 #else
           // my laptop in High Performance mode
           const double minMillionRaysPerSec = 4.5;
-          const double maxMillionRaysPerSec = 8.0;
+          const double maxMillionRaysPerSec = 8.1;
 #endif
 
           const int numRays = 1000000;
@@ -112,7 +112,6 @@ namespace Engine3D_Tests
         [TestMethod]
         public void RayIntersectPlanePerformance()
         {
-            // a million rays takes ~300ms in Release mode; ~650ms in Debug mode (all with laptop on Power Saver mode)
 #if DEBUG
             const double minMillionRaysPerSec = 0.9;
             const double maxMillionRaysPerSec = 1.7;
@@ -122,8 +121,8 @@ namespace Engine3D_Tests
             const double maxMillionRaysPerSec = 10.8;
 #else
             // my laptop in High Performance mode
-            const double minMillionRaysPerSec = 4.0;
-            const double maxMillionRaysPerSec = 6.0;
+            const double minMillionRaysPerSec = 4.5;
+            const double maxMillionRaysPerSec = 7.5;
 #endif
 
             const int numRays = 1000000;
@@ -151,7 +150,6 @@ namespace Engine3D_Tests
         [TestMethod]
         public void RayIntersectTrianglePerformance()
         {
-            // a million rays takes ~300ms in Release mode; ~850ms in Debug mode (all with laptop on Power Saver mode)
 #if DEBUG
             const double minMillionRaysPerSec = 0.7;
             const double maxMillionRaysPerSec = 1.3;
@@ -162,7 +160,7 @@ namespace Engine3D_Tests
 #else
             // my laptop in High Performance mode
             const double minMillionRaysPerSec = 4.5;
-            const double maxMillionRaysPerSec = 7.1;
+            const double maxMillionRaysPerSec = 7.4;
 #endif
 
             const int numRays = 1000000;
@@ -202,7 +200,7 @@ namespace Engine3D_Tests
 #else
             // my laptop in High Performance mode
             const double minMillionRaysPerSec = 3.0;
-            const double maxMillionRaysPerSec = 3.6;
+            const double maxMillionRaysPerSec = 3.8;
 #endif
 
             const int numRays = 1000000;
@@ -242,7 +240,7 @@ namespace Engine3D_Tests
 #else
             // my laptop in High Performance mode
             const double minMillionRaysPerSec = 2.8;
-            const double maxMillionRaysPerSec = 4.1;
+            const double maxMillionRaysPerSec = 4.2;
 #endif
 
             const int numRays = 1000000;
@@ -280,8 +278,8 @@ namespace Engine3D_Tests
             const double maxMillionRaysPerSec = 8.5;
 #else
             // my laptop in High Performance mode
-            const double minMillionRaysPerSec = 4.3;
-            const double maxMillionRaysPerSec = 5.6;
+            const double minMillionRaysPerSec = 4.5;
+            const double maxMillionRaysPerSec = 6.0;
 #endif
 
             const int numRays = 1000000;
@@ -360,6 +358,7 @@ namespace Engine3D_Tests
         }
 
         // TODO: this function is slower than simply calling random.NextRandom()! Maybe because of the method call and array access?
+        // TODO: with numRandomDoubles=123 the values do not seem very random: RayIntersectPlanePerformance fails because of this.
         private double NextRandomDouble()
         {
             return random.NextDouble();
