@@ -18,9 +18,8 @@ namespace Engine3D.Raytrace
         {
             var delta = end - start;
             var absDelta = new Vector(Math.Abs(delta.x), Math.Abs(delta.y), Math.Abs(delta.z));
-
-            var maxDimSize = Math.Max(Math.Max(delta.x, delta.y), delta.z);
-            int numSteps = (int)(maxDimSize / minStep);
+            var maxDimSize = Math.Max(Math.Max(absDelta.x, absDelta.y), absDelta.z);
+            int numSteps = Math.Max(1, (int)(maxDimSize / minStep));
             delta *= minStep / maxDimSize;
 
             var pos = start;

@@ -75,6 +75,7 @@ namespace Engine3D
         public bool rayTraceLightField = false;
         public bool rayTraceSubdivision = true;
         public bool rayTracePathTracing = false;
+        public bool rayTraceVoxels = false;
         public bool rayTraceFocalBlur = true;   // TODO: focal blur only works if rayTraceSubPixelRes > 1. Give focal blur an indepedant sub-resolution.
         public double rayTraceFocalDepth = 1.5; // the depth from the camera at which surfaces are exactly in focus
         public double rayTraceFocalBlurStrength = 10.0;
@@ -1618,33 +1619,34 @@ namespace Engine3D
             }
             lightFieldColorMethod.Enabled = rayTraceLightField && !lightFieldHasTris;
 
-
-/*
-            // TODO: test out Voxel geometry
-            const int voxelGridSize = 128;
-            var voxelData = new uint[voxelGridSize, voxelGridSize, voxelGridSize];
-            var random = new Random(rayTraceRandomSeed);
-
-            for (var x = 0; x < voxelGridSize; x++)
+            // TODO: test Voxel geometry
+            if (rayTraceVoxels)
             {
-                for (var y = 0; y < voxelGridSize; y++)
+                const int voxelGridSize = 4;
+                var voxelData = new uint[voxelGridSize, voxelGridSize, voxelGridSize];
+                var random = new Random(rayTraceRandomSeed);
+
+                for (var x = 0; x < voxelGridSize; x++)
                 {
-                    for (var z = 0; z < voxelGridSize; z++)
+                    for (var y = 0; y < voxelGridSize; y++)
                     {
-                        voxelData[x, y, z] = (random.Next(2) == 0 ? 0 : (uint)random.Next());
+                        for (var z = 0; z < voxelGridSize; z++)
+                        {
+                            // pick a random opaque color
+                            var color = (/*random.Next(2) == 0 ? 0 : */(uint)random.Next() | 0xff000000);
+                            voxelData[x, y, z] = color;
+                        }
                     }
                 }
+
+                var geometryGroup = new GeometryCollection();
+                //uint color1 = 0; //  Color.Red.ToARGB();
+                //uint color2 = Color.Green.ToARGB();
+                //geometryGroup.Add(new VoxelGrid(2, new uint[] { color1, color2, color1, color2, color1, color2, color1, color2 }));
+                geometryGroup.Add(new VoxelGrid(voxelGridSize, voxelData));
+                //geometryGroup.Add(rootGeometry);
+                rootGeometry = geometryGroup;
             }
-
-            var geometryGroup = new GeometryCollection();
-            //uint color1 = 0; //  Color.Red.ToARGB();
-            //uint color2 = Color.Green.ToARGB();
-            //geometryGroup.Add(new VoxelGrid(2, new uint[] { color1, color2, color1, color2, color1, color2, color1, color2 }));
-            geometryGroup.Add(new VoxelGrid(voxelGridSize, voxelData));
-            //geometryGroup.Add(rootGeometry);
-            rootGeometry = geometryGroup;
-*/
-
 
             // Ensure that we don't attempt to draw outside the 2D surface.
             rayTraceStartRow = Math.Min(Math.Max(0, rayTraceStartRow), height - 1);
