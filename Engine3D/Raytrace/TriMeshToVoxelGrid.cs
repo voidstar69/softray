@@ -13,13 +13,13 @@ namespace Engine3D.Raytrace
         /// <param name="triangles">Triangles bounded by the unit cube centred at the origin</param>
         /// <param name="voxelGridSize">The resolution of the voxel grid</param>
         /// <returns></returns>
-        static public uint[, ,] Convert(List<Raytrace.Triangle> triangles, int voxelGridSize)
+        static public VoxelGrid Convert(List<Raytrace.Triangle> triangles, int voxelGridSize)
         {
-            var voxels = new uint[voxelGridSize, voxelGridSize, voxelGridSize];
+            var voxelColors = new uint[voxelGridSize, voxelGridSize, voxelGridSize];
+            var voxelNormals = new Vector[voxelGridSize, voxelGridSize, voxelGridSize];
 
             for (var x = 0; x < voxelGridSize; x++)
             {
-                // TODO: need to normalise x
                 var x0 = ((double)x / voxelGridSize) - 0.5;
                 var x1 = ((double)(x + 1) / voxelGridSize) - 0.5;
                 Plane leftPlane = new Plane(new Vector(x0, 0, 0), new Vector(1, 0, 0));
@@ -28,7 +28,6 @@ namespace Engine3D.Raytrace
 
                 for (var y = 0; y < voxelGridSize; y++)
                 {
-                    // TODO: need to normalise y
                     var y0 = ((double)y / voxelGridSize) - 0.5;
                     var y1 = ((double)(y + 1) / voxelGridSize) - 0.5;
                     Plane topPlane = new Plane(new Vector(0, y0, 0), new Vector(0, 1, 0));
@@ -37,7 +36,6 @@ namespace Engine3D.Raytrace
 
                     for (var z = 0; z < voxelGridSize; z++)
                     {
-                        // TODO: need to normalise z
                         var z0 = ((double)z / voxelGridSize) - 0.5;
                         var z1 = ((double)(z + 1) / voxelGridSize) - 0.5;
                         Plane nearPlane = new Plane(new Vector(0, 0, z0), new Vector(0, 0, 1));
@@ -66,7 +64,12 @@ namespace Engine3D.Raytrace
                             cellColor = color.ToARGB();
                         }
 
-                        voxels[x, y, z] = cellColor;
+                        voxelColors[x, y, z] = cellColor;
+
+                        // Pick normal of first triangle in cell
+                        Vector normal = (trisInCell.Count == 0 ? Vector.Zero : trisInCell[0].Plane.Normal);
+
+                        voxelNormals[x, y, z] = normal;
                     }
                 }
             }
@@ -89,7 +92,7 @@ namespace Engine3D.Raytrace
             }
 */
 
-            return voxels;
+            return new VoxelGrid(voxelGridSize, voxelColors, voxelNormals);
         }
 
         static private List<Raytrace.Triangle> FindTrianglesInsidePlanes(List<Raytrace.Triangle> tris, List<Plane> planes)

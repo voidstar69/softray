@@ -7,17 +7,26 @@ namespace Engine3D.Raytrace
     public class VoxelGrid : IRayIntersectable
     {
         private readonly int gridSize;
-        private readonly Voxel[,,] voxels; // 32-bit colours
-
+        private readonly Voxel[, ,] voxelColors;    // 32-bit colours
+        private readonly Vector[, ,] voxelNormals;
         private readonly AxisAlignedBox boundingBox;
 
-        public VoxelGrid(int gridSize, Voxel[,,] voxels)
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="gridSize">Resolution of 3D grid</param>
+        /// <param name="voxelColors">3D grid of voxel colors</param>
+        /// <param name="voxelNormals">3D grid of voxel normals</param>
+        public VoxelGrid(int gridSize, Voxel[, ,] voxelColors, Vector[, ,] voxelNormals)
         {
             Contract.Requires(gridSize > 0);
-            Contract.Requires(voxels != null);
-            Contract.Requires(voxels.Length == gridSize * gridSize * gridSize);
+            Contract.Requires(voxelColors != null);
+            Contract.Requires(voxelColors.Length == gridSize * gridSize * gridSize);
+            Contract.Requires(voxelNormals != null);
+            Contract.Requires(voxelNormals.Length == gridSize * gridSize * gridSize);
             this.gridSize = gridSize;
-            this.voxels = voxels;
+            this.voxelColors = voxelColors;
+            this.voxelNormals = voxelNormals;
             boundingBox = new AxisAlignedBox(new Vector(-1, -1, -1), new Vector(1, 1, 1));
         }
 
@@ -56,16 +65,22 @@ namespace Engine3D.Raytrace
 
                 if (x != oldX && y != oldY && z != oldZ)
                 {
-                    Voxel sample = voxels[x,y,z];
+                    Voxel colorSample = voxelColors[x,y,z];
 
                     // Treat black voxels as transparent
-                    if (sample != 0)
+                    if (colorSample != 0)
                     {
-                        var normal = new Vector(oldX - x, oldY - y, oldZ - z);
-                        normal.Normalise();
+                        //var normal = new Vector(oldX - x, oldY - y, oldZ - z);
+                        //normal.Normalise();
+
+                        var normal = voxelNormals[x, y, z];
+                        Contract.Assert(normal.IsUnitVector);
+
+                        // DEBUGGING: visualise normals
+                        //colorSample = new Color(normal.x, normal.y, normal.z).ToARGB();
 
                         // TODO: also return correct rayFrac, pos and normal
-                        return new IntersectionInfo { color = sample, normal = normal };
+                        return new IntersectionInfo { color = colorSample, normal = normal /*, pos = pos, rayFrac = (pos - start).Length */ };
                         //return new IntersectionInfo { color = sample, pos = pos, rayFrac = (pos - start).Length, normal = Vector.Up };
                     }
                 }

@@ -1570,13 +1570,7 @@ namespace Engine3D
                     triList.Add(tri);
                 }
 
-                var voxelData = TriMeshToVoxelGrid.Convert(triList, voxelGridSize);
-
-                //var geometryGroup = new GeometryCollection();
-                //geometryGroup.Add(new VoxelGrid(voxelGridSize, voxelData));
-                //rootGeometry = geometryGroup;
-
-                rootGeometry = new VoxelGrid(voxelGridSize, voxelData);
+                rootGeometry = TriMeshToVoxelGrid.Convert(triList, voxelGridSize);
             }
 
             if (lightFieldTriMethod == null)

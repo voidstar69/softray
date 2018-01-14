@@ -73,7 +73,7 @@ namespace Raytracer
             _renderer.rayTracePathTracing = true;
             _renderer.rayTraceVoxels = true;
             _renderer.rayTraceSubPixelRes = 1;
-            _renderer.rayTraceFocalBlur = true; //  true;
+            _renderer.rayTraceFocalBlur = true;
             _renderer.rayTraceFocalDepth = sceneDepth;
             _renderer.rayTraceFocalBlurStrength = 10.0;
 
