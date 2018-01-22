@@ -235,7 +235,7 @@ public void TreeCorrectness1()
  TestTree(tree, triList);
 }
 
-        private void TestTree(SpatialSubdivision tree, List<Triangle> triList)
+        private void TestTree(SpatialSubdivision tree, ICollection<Triangle> triList)
         {
             var triSet = new GeometryCollection();
             foreach(var tri in triList)
