@@ -225,6 +225,45 @@ namespace Engine3D_Tests
             }
         }
 
+[TestMethod]
+public void TreeCorrectness1()
+{
+ const int numTris = 100;
+ SpatialSubdivision tree;
+ var triList = BuildRandomTree(numTris, maxTreeDepth: 10, maxGeometryPerNode: 5, randomSeed: 12345, tree: out tree);
+
+ TestTree(tree, triList);
+}
+
+        private void TestTree(SpatialSubdivision tree, List<Triangle> triList)
+        {
+            var triSet = new GeometryCollection();
+            foreach(var tri in triList)
+            {
+                triSet.Add(tri);
+            }
+
+            const int numRays = 100000;
+            var numRaysHit = 0;
+            for (var i = 0; i < numRays; i++)
+            {
+                var start = MakeRandomVector(triangleSpaceSize);
+                var dir = MakeRandomVector(-1, 1, -1, 1, -1, 1);
+                var info = tree.IntersectRay(start, dir, context);
+                var infoBase = triSet.IntersectRay(start, dir, context);
+                Assert.AreEqual(infoBase == null, info == null, "Ray " + i + ": SpatialSubdivision and GeometryCollection differ in intersection status");
+                if (info != null)
+                {
+                    numRaysHit++;
+                    Assert.AreEqual(infoBase.triIndex, info.triIndex, "triIndex diff on ray " + i);
+                    Assert.AreEqual(infoBase.rayFrac, info.rayFrac, "rayFrac diff on ray " + i);
+                    Assert.AreEqual(infoBase.pos, info.pos, "pos diff on ray " + i);
+                    Assert.AreEqual(infoBase.normal, info.normal, "normal diff on ray " + i);
+                    Assert.AreEqual(infoBase.color, info.color, "color diff on ray " + i);
+                }
+            }
+        }
+
         private const int triangleSpaceSize = 100;
         private const int triangleExtentSize = 10;
 
