@@ -228,9 +228,9 @@ namespace Engine3D_Tests
 [TestMethod]
 public void TreeCorrectness1()
 {
- const int numTris = 100;
+ const int numTris = 10;
  SpatialSubdivision tree;
- var triList = BuildRandomTree(numTris, maxTreeDepth: 10, maxGeometryPerNode: 5, randomSeed: 12345, tree: out tree);
+ var triList = BuildRandomTree(numTris, maxTreeDepth: 5, maxGeometryPerNode: 2, randomSeed: 12345, tree: out tree);
 
  TestTree(tree, triList);
 }
