@@ -99,8 +99,7 @@ namespace Engine3D_Tests
             var start = MakeRandomVector(-10, 10, -10, 10, -10, 10);
             var dir = MakeRandomVector(1, 1, 1);
             var info = new IntersectionInfo();
-            if (info != null)
-              numRaysHit++;
+            numRaysHit++;
           }
           var elapsedTime = DateTime.Now - startTime;
           var millionRaysPerSec = numRays / 1000000.0 / elapsedTime.TotalSeconds;

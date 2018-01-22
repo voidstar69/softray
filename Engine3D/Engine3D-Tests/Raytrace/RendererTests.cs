@@ -14,8 +14,8 @@ namespace Engine3D_Tests
     [TestClass]
     public class RendererTests
     {
-        private const int maxImageWidth = 100;
-        private const int maxImageHeight = 100;
+        private const int maxImageWidth = 400;
+        private const int maxImageHeight = 400;
 
         // Faster regression test
         private const int defaultResolution = 100;
@@ -36,6 +36,7 @@ namespace Engine3D_Tests
         //private readonly ImageFormat bitmapFormat = ImageFormat.Png;
 
         private string modelFileName = "../../obj.3ds";
+        private string raytraceTestSuffix;
         private double objectDepth = 1.0; // depth of object (in view space)
 
         //private const double yawDegrees = 45.0;
@@ -300,6 +301,52 @@ namespace Engine3D_Tests
                 Assert.Fail("{0} missing baseline images were recreated", numMissingBaselines);
         }
 
+        // Basically runs forever as it attempts to render all objects as voxels
+        [TestMethod, Ignore]
+        public void RaytraceVoxelGridWithAllObjects()
+        {
+//            const string dir = "../../../../Raytracer/";
+            const string dir = @"C:\Src\SVN\ModelLibrary\database\3dModels\";
+            const string skipUntilModel = "F4U1_L";
+            bool renderModel = false;
+
+            foreach(var filePath in Directory.EnumerateFiles(dir, "*.3DS"))
+            {
+                modelFileName = filePath;
+                raytraceTestSuffix = filePath.Replace(dir, "").Replace(".3DS", "");
+                objectDepth = 3.0;
+
+                if (raytraceTestSuffix == skipUntilModel)
+                    renderModel = true;
+
+                try
+                {
+                    if (renderModel)
+                    {
+                        Console.WriteLine("Rendering model: {0}", raytraceTestSuffix);
+                        RaytraceScenario(/*pitchDegrees: -45, yawDegrees: 135, rollDegrees: 0, */ voxels: true, shading: true, resolution: 400);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Skipping render of model: {0}", raytraceTestSuffix);
+                    }
+                }
+                catch (FormatException ex)
+                {
+                    // TODO: Some 3DS files have no entities in model. Model.Load3ds throws this exeception.
+                    Console.WriteLine("FormatException: {0}", ex);
+                }
+                catch (OutOfMemoryException ex)
+                {
+                    // TODO: TriMeshToVoxelGrid.Convert sometimes runs out of memory allocating voxelNormals 3D array
+                    Console.WriteLine("OutOfMemoryException: {0}", ex);
+                }
+            }
+
+            if (numMissingBaselines > 0)
+                Assert.Fail("{0} missing baseline images were recreated", numMissingBaselines);
+        }
+
         // skip all tests up until a specific test, then run it and all the rest
 /*
         private const string startFromTest = "raytrace/100x100/noShading_staticShadows_lightField";
@@ -359,7 +406,8 @@ namespace Engine3D_Tests
                     (lightField && lightFieldWithTris ? "_lightFieldTri" : "") + (lightField && !lightFieldWithTris ? "_lightFieldColor" : "") +
                     (renderer.rayTraceFocalBlur ? "_focalBlur" : "") +
                     (focalBlur ? "x" + subPixelRes : (subPixelRes > 1 ? "_" + subPixelRes + "xAA" : "")) +
-                    (extraGeometry != null ? ("_" + (extraGeometry.Count + 1) + "_geometry") : "");
+                    (extraGeometry != null ? ("_" + (extraGeometry.Count + 1) + "_geometry") : "") +
+                    raytraceTestSuffix;
 
 /*
                 // skip all tests up until a specific test, then run it and all the rest
@@ -376,10 +424,11 @@ namespace Engine3D_Tests
                 {
                     RenderAndTest(testName, renderer, resolution, resolution);
                 }
-                catch(Exception)
+                catch(Exception ex)
                 {
                     // TODO: reports test name, but breaks stack trace links.
                     //Assert.Fail("{0}: threw exception", testName);
+                    Console.WriteLine(ex);
                     throw;
                 }
             }

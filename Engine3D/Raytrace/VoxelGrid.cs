@@ -63,6 +63,7 @@ namespace Engine3D.Raytrace
                 var z = (int)pos.z;
                 Contract.Assert(x >= 0 && x < gridSize && y >= 0 && y < gridSize && z >= 0 && z < gridSize);
 
+                // TODO: Contracts analyser says pos.z is not -1 here, and similarly for x and y
                 if (x != oldX && y != oldY && z != oldZ)
                 {
                     Voxel colorSample = voxelColors[x,y,z];
