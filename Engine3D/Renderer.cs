@@ -1565,7 +1565,7 @@ namespace Engine3D
 
             if (rayTraceVoxels && voxels == null)
             {
-                const int voxelGridSize = 256;
+                const int voxelGridSize = 64;
 
                 // Copy the triangles from the simply geometry into a list
                 var triList = new List<Raytrace.Triangle>();
