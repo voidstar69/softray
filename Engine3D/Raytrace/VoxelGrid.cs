@@ -1,33 +1,118 @@
-﻿using System.Diagnostics.Contracts;
+﻿// Only one of these USE_* must be defined. If none are defined, data is not persisted to/from disk.
+#if SILVERLIGHT // Silverlight supports isolated storage, but not normal files or memory-mapped files
+//#define USE_ISOLATED_STORAGE // TODO: this clas does not support isolated storage
+#else // ASP.NET (or standard C#) supports normal files or memory-mapped files, but not isolated storage
+#define USE_FILES
+#endif
+
+using System;
+using System.Diagnostics.Contracts;
+using System.IO;
 
 namespace Engine3D.Raytrace
 {
-    using Voxel = System.UInt32;
-
     public class VoxelGrid : IRayIntersectable
     {
         private readonly int gridSize;
-        private readonly Voxel[, ,] voxelColors;    // 32-bit colours
-        private readonly Vector[, ,] voxelNormals;
         private readonly AxisAlignedBox boundingBox;
+
+#if USE_FILES
+        private readonly string voxelColorFilePath;
+        private readonly string voxelNormalFilePath;
+#endif
+
+        private uint[, ,] voxelColors;      // 3D grid of 32-bit colours
+        private Vector[, ,] voxelNormals;   // 3D grid of triple of doubles
 
         /// <summary>
         /// Constructor
         /// </summary>
-        /// <param name="gridSize">Resolution of 3D grid</param>
-        /// <param name="voxelColors">3D grid of voxel colors</param>
-        /// <param name="voxelNormals">3D grid of voxel normals</param>
-        public VoxelGrid(int gridSize, Voxel[, ,] voxelColors, Vector[, ,] voxelNormals)
+        /// <param name="gridSize">Resolution of N x N x N grid of voxels.
+        /// A power-of-two size might make indexing into the 3D grid faster.</param>
+        /// <param name="instanceKey">A text value unique to the current 3D model instance.</param>
+        public VoxelGrid(int gridSize, string instanceKey, string cachePath)
         {
             Contract.Requires(gridSize > 0);
+            this.gridSize = gridSize;
+            boundingBox = new AxisAlignedBox(new Vector(-1, -1, -1), new Vector(1, 1, 1));
+
+#if USE_FILES
+            voxelColorFilePath = Path.Combine(cachePath, string.Format("{0}_res{1}.color", instanceKey, gridSize));
+            voxelNormalFilePath = Path.Combine(cachePath, string.Format("{0}_res{1}.normal", instanceKey, gridSize));
+
+            voxelColors = new uint[gridSize, gridSize, gridSize];
+            if (!LoadArrayFromDisk(voxelColorFilePath, voxelColors))
+                voxelColors = null;
+
+            double[] normalsAsDoubleArray = new double[gridSize * gridSize * gridSize * 3];
+            if (LoadArrayFromDisk(voxelNormalFilePath, normalsAsDoubleArray))
+            {
+                // Copy voxel normals from array of doubles. LoadArrayFromDisk requires an array of primitives.
+                voxelNormals = new Vector[gridSize, gridSize, gridSize];
+                Vector normal;
+                int i = 0;
+                for (var x = 0; x < gridSize; x++)
+                {
+                    for (var y = 0; y < gridSize; y++)
+                    {
+                        for (var z = 0; z < gridSize; z++)
+                        {
+                            normal.x = normalsAsDoubleArray[i++];
+                            normal.y = normalsAsDoubleArray[i++];
+                            normal.z = normalsAsDoubleArray[i++];
+                            voxelNormals[x, y, z] = normal;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                voxelNormals = null;
+            }
+#endif
+        }
+
+        public bool HasData
+        {
+            get
+            {
+                return voxelColors != null && voxelNormals != null;
+            }
+        }
+
+        /// <param name="voxelColors">3D grid of voxel colors</param>
+        /// <param name="voxelNormals">3D grid of voxel normals</param>
+        public void SetData(uint[, ,] voxelColors, Vector[, ,] voxelNormals)
+        {
             Contract.Requires(voxelColors != null);
             Contract.Requires(voxelColors.Length == gridSize * gridSize * gridSize);
             Contract.Requires(voxelNormals != null);
             Contract.Requires(voxelNormals.Length == gridSize * gridSize * gridSize);
-            this.gridSize = gridSize;
+
             this.voxelColors = voxelColors;
             this.voxelNormals = voxelNormals;
-            boundingBox = new AxisAlignedBox(new Vector(-1, -1, -1), new Vector(1, 1, 1));
+
+#if USE_FILES
+            // Copy voxel normals to array of doubles. SaveArrayToDisk requires an array of primitives.
+            double[] normalsAsDoubleArray = new double[gridSize * gridSize * gridSize * 3];
+            int i = 0;
+            for (var x = 0; x < gridSize; x++)
+            {
+                for (var y = 0; y < gridSize; y++)
+                {
+                    for (var z = 0; z < gridSize; z++)
+                    {
+                        var normal = voxelNormals[x, y, z];
+                        normalsAsDoubleArray[i++] = normal.x;
+                        normalsAsDoubleArray[i++] = normal.y;
+                        normalsAsDoubleArray[i++] = normal.z;
+                    }
+                }
+            }
+
+            SaveArrayToDisk(voxelColorFilePath, voxelColors);
+            SaveArrayToDisk(voxelNormalFilePath, normalsAsDoubleArray);
+#endif
         }
 
         /// <summary>
@@ -66,7 +151,7 @@ namespace Engine3D.Raytrace
                 // TODO: Contracts analyser says pos.z is not -1 here, and similarly for x and y
                 if (x != oldX && y != oldY && z != oldZ)
                 {
-                    Voxel colorSample = voxelColors[x,y,z];
+                    uint colorSample = voxelColors[x,y,z];
 
                     // Treat black voxels as transparent
                     if (colorSample != 0)
@@ -100,6 +185,89 @@ namespace Engine3D.Raytrace
             get
             {
                 return 1;
+            }
+        }
+
+        // Array must be of a primitive type
+        private static bool LoadArrayFromDisk(string cacheFilePath, Array data)
+        {
+#if USE_ISOLATED_STORAGE
+            // Isolated storage works in Silverlight but not ASP.NET
+            // TODO: not enough free space in isolated storage for such large files - file is corrupted!
+            using (IsolatedStorageFile isolatedStorage = IsolatedStorageFile.GetUserStoreForApplication())
+            {
+                if (!isolatedStorage.FileExists(cacheFilePath))
+                    return false;
+
+                using (var fileStream = isolatedStorage.OpenFile(cacheFilePath, System.IO.FileMode.Open))
+                {
+                    ReadArrayFromStream(fileStream, data);
+                }
+            }
+#elif USE_FILES
+            // Cache to normal file for ASP.NET
+            // TODO: use memory-mapped files to allow files to be much larger than free memory
+            if (!File.Exists(cacheFilePath))
+                return false;
+
+            using (var fileStream = File.OpenRead(cacheFilePath))
+            {
+                ReadArrayFromStream(fileStream, data);
+            }
+#endif
+
+            return true;
+        }
+
+        // Array must be of a primitive type
+        private static void SaveArrayToDisk(string cacheFilePath, Array data)
+        {
+#if USE_ISOLATED_STORAGE
+            // Isolated storage works in Silverlight but not ASP.NET
+            // TODO: not enough free space in isolated storage for such large files!
+            using (IsolatedStorageFile isolatedStorage = IsolatedStorageFile.GetUserStoreForApplication())
+            {
+                using (var fileStream = isolatedStorage.CreateFile(cacheFilePath))
+                {
+                    WriteArrayToStream(data, fileStream);
+                }
+            }
+#else
+            // Cache to normal file for ASP.NET
+            // TODO: use memory-mapped files to allow files to be much larger than free memory
+            using (var fileStream = File.OpenWrite(cacheFilePath))
+            {
+                WriteArrayToStream(data, fileStream);
+            }
+#endif
+        }
+
+        // TODO: could replace this with Stream.Read(array, offset, count)
+        private static void ReadArrayFromStream(Stream stream, Array data)
+        {
+            byte[] buffer = new byte[4096];
+            int destBytePos = 0;
+            int bytesRead;
+            while ((bytesRead = stream.Read(buffer, 0, buffer.Length)) > 0)
+            {
+                Buffer.BlockCopy(buffer, 0, data, destBytePos, bytesRead);
+                destBytePos += bytesRead;
+            }
+        }
+
+        // TODO: could replace this with Stream.Write(array, offset, count)
+        private static void WriteArrayToStream(Array data, Stream stream)
+        {
+            byte[] buffer = new byte[4096];
+            int srcBytePos = 0;
+            int bytesLeft = Buffer.ByteLength(data); // TODO: this throws if Array does not contain primitives
+            while (bytesLeft > 0)
+            {
+                int bytesThisBlock = Math.Min(buffer.Length, bytesLeft);
+                Buffer.BlockCopy(data, srcBytePos, buffer, 0, bytesThisBlock);
+                stream.Write(buffer, 0, bytesThisBlock);
+                srcBytePos += bytesThisBlock;
+                bytesLeft -= bytesThisBlock;
             }
         }
     }

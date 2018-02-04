@@ -117,6 +117,9 @@ namespace Engine3D
         // Technique for calculating ambient occlusion (during raytracing)
         private AmbientOcclusionMethod ambientOcclusionMethod;
 
+        // 3D grid of voxels
+        private VoxelGrid voxels;
+
 //#if DEBUG
 
 //        public int rayTraceDebug = 0;
@@ -1558,9 +1561,9 @@ namespace Engine3D
 */
             }
 
-            if (rayTraceVoxels)
+            if (rayTraceVoxels && voxels == null)
             {
-                const int voxelGridSize = 64;
+                const int voxelGridSize = 256;
 
                 // Copy the triangles from the simply geometry into a list
                 var triList = new List<Raytrace.Triangle>();
@@ -1570,7 +1573,14 @@ namespace Engine3D
                     triList.Add(tri);
                 }
 
-                rootGeometry = TriMeshToVoxelGrid.Convert(triList, voxelGridSize);
+                var instanceKey = string.Format("voxels_tri{0}_vert{1}", instance.Model.Triangles.Count, instance.Model.Vertices.Count);
+                voxels = new VoxelGrid(voxelGridSize, instanceKey, CachePath); // TODO: this assumes only one instance globally!
+                if (!voxels.HasData)
+                {
+                    TriMeshToVoxelGrid.Convert(triList, voxelGridSize, voxels);
+                }
+
+                rootGeometry = voxels;
             }
 
             if (lightFieldTriMethod == null)

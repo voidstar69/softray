@@ -13,7 +13,7 @@ namespace Engine3D.Raytrace
         /// <param name="triangles">Triangles bounded by the unit cube centred at the origin</param>
         /// <param name="voxelGridSize">The resolution of the voxel grid</param>
         /// <returns></returns>
-        static public VoxelGrid Convert(List<Raytrace.Triangle> triangles, int voxelGridSize)
+        static public void Convert(List<Raytrace.Triangle> triangles, int voxelGridSize, VoxelGrid voxelGrid)
         {
             var voxelColors = new uint[voxelGridSize, voxelGridSize, voxelGridSize];
             var voxelNormals = new Vector[voxelGridSize, voxelGridSize, voxelGridSize];
@@ -92,7 +92,7 @@ namespace Engine3D.Raytrace
             }
 */
 
-            return new VoxelGrid(voxelGridSize, voxelColors, voxelNormals);
+            voxelGrid.SetData(voxelColors, voxelNormals);
         }
 
         static private List<Raytrace.Triangle> FindTrianglesInsidePlanes(List<Raytrace.Triangle> tris, List<Plane> planes)

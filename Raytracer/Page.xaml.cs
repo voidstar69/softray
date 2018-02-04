@@ -69,11 +69,11 @@ namespace Raytracer
             _renderer.LightFieldStoresTriangles = false;
 
             // TODO: test this
-            _renderer.rayTraceShading = false;
-            _renderer.rayTracePathTracing = true;
+            _renderer.rayTraceShading = true;
+            _renderer.rayTracePathTracing = false;
             _renderer.rayTraceVoxels = true;
             _renderer.rayTraceSubPixelRes = 1;
-            _renderer.rayTraceFocalBlur = true;
+            _renderer.rayTraceFocalBlur = false;
             _renderer.rayTraceFocalDepth = sceneDepth;
             _renderer.rayTraceFocalBlurStrength = 10.0;
 
