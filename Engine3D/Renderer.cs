@@ -1502,6 +1502,8 @@ namespace Engine3D
         {
             Contract.Requires(instance != null);
 
+            Directory.CreateDirectory(CachePath);
+
             // TODO: this does lots of unneccessary transformation and lighting work!!!
             instance.InitRender(calcLightingIntensity);
 
