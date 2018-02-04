@@ -226,7 +226,7 @@ namespace Engine3D
             surface = new Surface(width, height, new int[1]);
 
             // Default cache path
-            CachePath = "c:/temp";
+            CachePath = "./cache";
         }
 
         #endregion
