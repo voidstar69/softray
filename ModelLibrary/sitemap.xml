@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>http://www.sculpture3d.com/</loc>
+  </url>
+  <url>
+    <loc>http://www.sculpture3d.com/LargeImages.aspx</loc>
+  </url>
+  <url>
+    <loc>http://www.sculpture3d.com/ModelPreview.aspx?model=01-Loader_3dmodel</loc>
+  </url>
+  <url>
+    <loc>http://www.sculpture3d.com/ModelPreview.aspx?model=01-Loader_3dmodel&amp;animate=1&amp;yaw=220&amp;pitch=-20</loc>
+  </url>
+  <url>
+    <loc>http://www.sculpture3d.com/Viewer3D.aspx?model=01-Loader_3dmodel</loc>
+  </url>
+  <url>
+    <loc>http://www.sculpture3d.com/ModelPreview.aspx?model=Girl+N270309</loc>
+  </url>
+  <url>
+    <loc>http://www.sculpture3d.com/ModelPreview.aspx?model=girl2model</loc>
+  </url>
+</urlset>

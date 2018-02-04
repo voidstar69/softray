@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+sitemap: http://www.sculpture3d.com/sitemap.xml
