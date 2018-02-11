@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 
 namespace Engine3D.Raytrace
 {
@@ -12,11 +10,18 @@ namespace Engine3D.Raytrace
         /// </summary>
         /// <param name="triangles">Triangles bounded by the unit cube centred at the origin</param>
         /// <param name="voxelGridSize">The resolution of the voxel grid</param>
-        /// <returns></returns>
-        static public void Convert(List<Raytrace.Triangle> triangles, int voxelGridSize, VoxelGrid voxelGrid)
+        /// <returns>Number of voxels cells that are 'filled in', i.e. non-empty</returns>
+        static public int Convert(List<Raytrace.Triangle> triangles, int voxelGridSize, VoxelGrid voxelGrid)
         {
+            Contract.Requires(Contract.ForAll(triangles, (t =>
+                t.Vertex1.x >= -0.5 && t.Vertex1.x <= 0.5 &&
+                t.Vertex2.y >= -0.5 && t.Vertex2.y <= 0.5 &&
+                t.Vertex3.z >= -0.5 && t.Vertex3.z <= 0.5)));
+
             var voxelColors = new uint[voxelGridSize, voxelGridSize, voxelGridSize];
             var voxelNormals = new Vector[voxelGridSize, voxelGridSize, voxelGridSize];
+            int totalTriInCellCount = 0;
+            int numFilledVoxels = 0;
 
             for (var x = 0; x < voxelGridSize; x++)
             {
@@ -32,7 +37,7 @@ namespace Engine3D.Raytrace
                     var y1 = ((double)(y + 1) / voxelGridSize) - 0.5;
                     Plane topPlane = new Plane(new Vector(0, y0, 0), new Vector(0, 1, 0));
                     Plane bottomPlane = new Plane(new Vector(0, y1, 0), new Vector(0, -1, 0));
-                    var trisInRowXY = FindTrianglesInsidePlanes(trisInSlabX, new List<Plane> { topPlane, bottomPlane });
+                    var trisInRowXY = FindTrianglesInsidePlanes(trisInSlabX, new List<Plane> { topPlane, bottomPlane /*, leftPlane, rightPlane*/ });
 
                     for (var z = 0; z < voxelGridSize; z++)
                     {
@@ -40,7 +45,7 @@ namespace Engine3D.Raytrace
                         var z1 = ((double)(z + 1) / voxelGridSize) - 0.5;
                         Plane nearPlane = new Plane(new Vector(0, 0, z0), new Vector(0, 0, 1));
                         Plane farPlane = new Plane(new Vector(0, 0, z1), new Vector(0, 0, -1));
-                        var trisInCell = FindTrianglesInsidePlanes(trisInRowXY, new List<Plane> { nearPlane, farPlane });
+                        var trisInCell = FindTrianglesInsidePlanes(trisInRowXY, new List<Plane> { nearPlane, farPlane /*, topPlane, bottomPlane, leftPlane, rightPlane*/ });
 
                         // Color based on number of triangles in cell
 //                        uint color = (trisInCell.Count == 0 ? 0 : (uint)(trisInCell.Count * 123456789) | 0xff000000);
@@ -62,6 +67,9 @@ namespace Engine3D.Raytrace
                             }
                             color /= trisInCell.Count;
                             cellColor = color.ToARGB();
+
+                            numFilledVoxels++;
+                            totalTriInCellCount += trisInCell.Count;
                         }
 
                         voxelColors[x, y, z] = cellColor;
@@ -74,6 +82,7 @@ namespace Engine3D.Raytrace
                 }
             }
 
+            Contract.Assert(totalTriInCellCount >= triangles.Count);
 
 /*
             // Random voxel grid
@@ -93,10 +102,16 @@ namespace Engine3D.Raytrace
 */
 
             voxelGrid.SetData(voxelColors, voxelNormals);
+
+            return numFilledVoxels;
         }
 
         static private List<Raytrace.Triangle> FindTrianglesInsidePlanes(List<Raytrace.Triangle> tris, List<Plane> planes)
         {
+            // TODO: a triangle can be 'inside' all planes (each plane has at least one triangle vertex 'inside' the plane),
+            // yet the triangle can still not intersect the volume defined by the planes.
+            // Do we need to clip the triangle to each plane to figure out if any part of the triangle lies 'inside' all planes?
+
             var newTris = new List<Raytrace.Triangle>();
             foreach (var tri in tris)
             {

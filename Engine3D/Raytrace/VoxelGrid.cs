@@ -13,7 +13,8 @@ namespace Engine3D.Raytrace
 {
     public class VoxelGrid : IRayIntersectable
     {
-        private readonly int gridSize;
+        public int GridSize { get; private set; }
+
         private readonly AxisAlignedBox boundingBox;
 
 #if USE_FILES
@@ -33,7 +34,7 @@ namespace Engine3D.Raytrace
         public VoxelGrid(int gridSize, string instanceKey, string cachePath)
         {
             Contract.Requires(gridSize > 0);
-            this.gridSize = gridSize;
+            GridSize = gridSize;
             boundingBox = new AxisAlignedBox(new Vector(-1, -1, -1), new Vector(1, 1, 1));
 
 #if USE_FILES
@@ -85,22 +86,22 @@ namespace Engine3D.Raytrace
         public void SetData(uint[, ,] voxelColors, Vector[, ,] voxelNormals)
         {
             Contract.Requires(voxelColors != null);
-            Contract.Requires(voxelColors.Length == gridSize * gridSize * gridSize);
+            Contract.Requires(voxelColors.Length == GridSize * GridSize * GridSize);
             Contract.Requires(voxelNormals != null);
-            Contract.Requires(voxelNormals.Length == gridSize * gridSize * gridSize);
+            Contract.Requires(voxelNormals.Length == GridSize * GridSize * GridSize);
 
             this.voxelColors = voxelColors;
             this.voxelNormals = voxelNormals;
 
 #if USE_FILES
             // Copy voxel normals to array of doubles. SaveArrayToDisk requires an array of primitives.
-            double[] normalsAsDoubleArray = new double[gridSize * gridSize * gridSize * 3];
+            double[] normalsAsDoubleArray = new double[GridSize * GridSize * GridSize * 3];
             int i = 0;
-            for (var x = 0; x < gridSize; x++)
+            for (var x = 0; x < GridSize; x++)
             {
-                for (var y = 0; y < gridSize; y++)
+                for (var y = 0; y < GridSize; y++)
                 {
-                    for (var z = 0; z < gridSize; z++)
+                    for (var z = 0; z < GridSize; z++)
                     {
                         var normal = voxelNormals[x, y, z];
                         normalsAsDoubleArray[i++] = normal.x;
@@ -135,8 +136,8 @@ namespace Engine3D.Raytrace
 
             // Scale up from (unit) object space to voxel grid resolution
             var half = new Vector(0.5, 0.5, 0.5);
-            start = (start * 0.5 + half) * ((double)gridSize - 0.001);
-            end = (end * 0.5 + half) * ((double)gridSize - 0.001);
+            start = (start * 0.5 + half) * ((double)GridSize - 0.001);
+            end = (end * 0.5 + half) * ((double)GridSize - 0.001);
 
             int oldX = -1, oldY = -1, oldZ = -1;
 
@@ -146,7 +147,7 @@ namespace Engine3D.Raytrace
                 int x = (int)pos.x;
                 var y = (int)pos.y;
                 var z = (int)pos.z;
-                Contract.Assert(x >= 0 && x < gridSize && y >= 0 && y < gridSize && z >= 0 && z < gridSize);
+                Contract.Assert(x >= 0 && x < GridSize && y >= 0 && y < GridSize && z >= 0 && z < GridSize);
 
                 // TODO: Contracts analyser says pos.z is not -1 here, and similarly for x and y
                 if (x != oldX && y != oldY && z != oldZ)
@@ -160,7 +161,7 @@ namespace Engine3D.Raytrace
                         //normal.Normalise();
 
                         var normal = voxelNormals[x, y, z];
-                        Contract.Assert(normal.IsUnitVector);
+                        Contract.Assume(normal.IsUnitVector);
 
                         // DEBUGGING: visualise normals
                         //colorSample = new Color(normal.x, normal.y, normal.z).ToARGB();

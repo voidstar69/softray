@@ -1502,7 +1502,9 @@ namespace Engine3D
         {
             Contract.Requires(instance != null);
 
+#if !SILVERLIGHT 
             Directory.CreateDirectory(CachePath);
+#endif
 
             // TODO: this does lots of unneccessary transformation and lighting work!!!
             instance.InitRender(calcLightingIntensity);
