@@ -277,7 +277,7 @@ namespace Engine3D_Tests
         }
 
         // Release mode: 1 seconds @ res 100
-        // Debug mode with contracts: ? min @ res 100
+        // Debug mode with contracts: 1 seconds @ res 100
         [TestMethod]
         public void RaytraceVoxelGrid()
         {
@@ -289,7 +289,7 @@ namespace Engine3D_Tests
         }
 
         // Release mode: 1 seconds @ res 100
-        // Debug mode with contracts: ? min @ res 100
+        // Debug mode with contracts: 5 seconds @ res 100
         [TestMethod]
         public void RaytraceVoxelGridWithOtherObject()
         {
@@ -307,7 +307,7 @@ namespace Engine3D_Tests
         {
 //            const string dir = "../../../../Raytracer/";
             const string dir = @"C:\Src\SVN\ModelLibrary\database\3dModels\";
-            const string skipUntilModel = "F4U1_L";
+            const string skipUntilModel = "kentaur.3ds";
             bool renderModel = false;
 
             foreach(var filePath in Directory.EnumerateFiles(dir, "*.3DS"))
