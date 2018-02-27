@@ -60,16 +60,23 @@ namespace Engine3D.Raytrace
                         uint cellColor = 0;
                         if (trisInCell.Count > 0)
                         {
+                            var voxelBox = new AxisAlignedBox(new Vector(x0, y0, z0), new Vector(x1, y1, z1));
+
                             Color color = Color.Black;
+                            int count = 0;
                             foreach (var tri in trisInCell)
                             {
-                                color += new Color(tri.Color);
+                                if (voxelBox.IntersectsTriangle(tri))
+                                {
+                                    color += new Color(tri.Color);
+                                    count++;
+                                }
                             }
-                            color /= trisInCell.Count;
+                            color /= count; // trisInCell.Count;
                             cellColor = color.ToARGB();
 
                             numFilledVoxels++;
-                            totalTriInCellCount += trisInCell.Count;
+                            totalTriInCellCount += count; // trisInCell.Count;
                         }
 
                         voxelColors[x, y, z] = cellColor;
@@ -106,7 +113,7 @@ namespace Engine3D.Raytrace
             return numFilledVoxels;
         }
 
-        static private List<Raytrace.Triangle> FindTrianglesInsidePlanes(List<Raytrace.Triangle> tris, List<Plane> planes)
+        static private List<Triangle> FindTrianglesInsidePlanes(List<Triangle> tris, List<Plane> planes)
         {
             // TODO: a triangle can be 'inside' all planes (each plane has at least one triangle vertex 'inside' the plane),
             // yet the triangle can still not intersect the volume defined by the planes.

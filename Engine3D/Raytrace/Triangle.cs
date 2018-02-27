@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.Contracts;
+﻿using System;
+using System.Diagnostics.Contracts;
 
 namespace Engine3D.Raytrace
 {
@@ -11,6 +12,7 @@ namespace Engine3D.Raytrace
 
         private readonly Vector edge1;
         private readonly Vector edge2;
+        private readonly Vector edge3;
 
         private readonly Vector edge1Perp;
         private readonly Vector edge2Perp;
@@ -49,11 +51,18 @@ namespace Engine3D.Raytrace
 
             // Only used by ray tracer when using lightfield storing triangle indices
             TriangleIndex = -1;
+
+            // Provided only for convenience to other classes
+            edge3 = v3 - v2;
         }
 
         public Vector Vertex1 { get { return vertex1.Position; } }
         public Vector Vertex2 { get { return vertex2.Position; } }
         public Vector Vertex3 { get { return vertex3.Position; } }
+
+        public Vector Edge1 { get { return edge1; } }
+        public Vector Edge2 { get { return edge2; } }
+        public Vector Edge3 { get { return edge3; } }
 
         public uint Color { get { return color; } }
 
@@ -117,6 +126,20 @@ namespace Engine3D.Raytrace
             planeHalfSpace |= vertex2.IntersectPlane(plane);
             planeHalfSpace |= vertex3.IntersectPlane(plane);
             return planeHalfSpace;
+        }
+
+        public void ProjectOntoAxis(Vector axis, out double intervalMin, out double intervalMax)
+        {
+            Contract.Requires(axis.IsUnitVector);
+            intervalMin = intervalMax = Vertex1.DotProduct(axis);
+
+            double dist = Vertex2.DotProduct(axis);
+            intervalMin = Math.Min(intervalMin, dist);
+            intervalMax = Math.Max(intervalMax, dist);
+
+            dist = Vertex3.DotProduct(axis);
+            intervalMin = Math.Min(intervalMin, dist);
+            intervalMax = Math.Max(intervalMax, dist);
         }
     }
 }

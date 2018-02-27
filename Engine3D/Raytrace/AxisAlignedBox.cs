@@ -72,9 +72,6 @@ namespace Engine3D.Raytrace
                 {
                     // Does the intersection point lie on the surface of this box?
                     if(ContainsPoint(curr.pos))
-                    //if (Close(curr.pos.x, min.x) || Close(curr.pos.x, max.x) ||
-                    //    Close(curr.pos.y, min.y) || Close(curr.pos.y, max.y) ||
-                    //    Close(curr.pos.z, min.z) || Close(curr.pos.z, max.z))
                     {
                         // Yes, so the ray intersects this box.
                         closest = curr;
@@ -126,9 +123,6 @@ namespace Engine3D.Raytrace
                 {
                     // Does the intersection point lie on the surface of this box?
                     if(ContainsPoint(curr.pos))
-                    //if (Close(curr.pos.x, min.x) || Close(curr.pos.x, max.x) ||
-                    //    Close(curr.pos.y, min.y) || Close(curr.pos.y, max.y) ||
-                    //    Close(curr.pos.z, min.z) || Close(curr.pos.z, max.z))
                     {
                         // Yes, so the ray intersects this box.
                         closest = curr;
@@ -152,18 +146,7 @@ namespace Engine3D.Raytrace
             return min.x - epsilon < pos.x && pos.x < max.x + epsilon &&
                    min.y - epsilon < pos.y && pos.y < max.y + epsilon &&
                    min.z - epsilon < pos.z && pos.z < max.z + epsilon;
-
-            //return min.x <= pos.x && pos.x <= max.x &&
-            //       min.y <= pos.y && pos.y <= max.y &&
-            //       min.z <= pos.z && pos.z <= max.z;
         }
-
-        //private bool PointInOrNearBox(Vector pos)
-        //{
-        //    return min.x - epsilon < pos.x && pos.x < max.x + epsilon &&
-        //           min.y - epsilon < pos.y && pos.y < max.y + epsilon &&
-        //           min.z - epsilon < pos.z && pos.z < max.z + epsilon;
-        //}
 
         /// <summary>
         /// Is any portion of the line segment within this box?
@@ -233,11 +216,111 @@ namespace Engine3D.Raytrace
         }
 
         /// <summary>
-        /// Are two numbers very close together?
+        /// Intersect a triangle against this AABB.
+		/// TODO: Currently broken!
         /// </summary>
-        //private bool Close(double a, double b)
-        //{
-        //    return Math.Abs(a - b) < 1e-10;
-        //}
+        public bool IntersectsTriangle(Triangle tri)
+        {
+            // TODO: is this optimisation worth it?
+            //if (IsTrianglesOutsidePlanes(tri, planes))
+            //{
+            //    return false;
+            //}
+
+            // This should test for overlap along all 13 axes (1 tri normal, 3 box axes, then 3 tri edges crossproduct 3 box axes)
+            // TODO: Unit tests still failing!
+
+            var normal = tri.Plane.Normal;
+            if (HasOverlapAlongAxis(normal, tri))
+            {
+                return true;
+            }
+
+            var xAxis = new Vector(1, 0, 0);
+            var yAxis = new Vector(0, 1, 0);
+            var zAxis = new Vector(0, 0, 1);
+            if (HasOverlapAlongAxis(xAxis, tri) ||
+                HasOverlapAlongAxis(yAxis, tri) ||
+                HasOverlapAlongAxis(zAxis, tri))
+            {
+                return true;
+            }
+
+            if (HasOverlapAlongAxis(tri.Edge1.CrossProduct(xAxis), tri) ||
+                HasOverlapAlongAxis(tri.Edge1.CrossProduct(yAxis), tri) ||
+                HasOverlapAlongAxis(tri.Edge1.CrossProduct(zAxis), tri) ||
+                HasOverlapAlongAxis(tri.Edge2.CrossProduct(xAxis), tri) ||
+                HasOverlapAlongAxis(tri.Edge2.CrossProduct(yAxis), tri) ||
+                HasOverlapAlongAxis(tri.Edge2.CrossProduct(zAxis), tri) ||
+                HasOverlapAlongAxis(tri.Edge3.CrossProduct(xAxis), tri) ||
+                HasOverlapAlongAxis(tri.Edge3.CrossProduct(yAxis), tri) ||
+                HasOverlapAlongAxis(tri.Edge3.CrossProduct(zAxis), tri))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Does the box overlap the triangle along the given axis?
+        /// </summary>
+        /// <param name="axis"></param>
+        /// <param name="tri"></param>
+        /// <returns></returns>
+        private bool HasOverlapAlongAxis(Vector axis, Triangle tri)
+        {
+            Contract.Requires(axis.IsUnitVector);
+
+            double triMin, triMax;
+            tri.ProjectOntoAxis(axis, out triMin, out triMax);
+
+            double boxMin, boxMax;
+            this.ProjectOntoAxis(axis, out boxMin, out boxMax);
+
+            return triMin < boxMax && boxMin < triMax;
+        }
+
+        private void ProjectOntoAxis(Vector axis, out double intervalMin, out double intervalMax)
+        {
+            Contract.Requires(axis.IsUnitVector);
+            Vector centre = (max + min) * 0.5;
+            Vector halfSize = (max - min) * 0.5;
+
+            double centreProj = centre.DotProduct(axis);
+
+            // project halfSize vector onto positive axis. Or equivalently project all (centre,corner) vectors onto axis.
+            double halfProjX = halfSize.x * Math.Abs(axis.x);
+            double halfProjY = halfSize.y * Math.Abs(axis.y);
+            double halfProjZ = halfSize.z * Math.Abs(axis.z);
+            double halfIntervalSize = halfProjX + halfProjY + halfProjZ;
+
+            intervalMin = centreProj - halfIntervalSize;
+            intervalMax = centreProj + halfIntervalSize;
+        }
+
+        /// <summary>
+        /// Tests whether a triangle is 'outside' one of a set of planes.
+        /// </summary>
+        /// <param name="tri"></param>
+        /// <param name="planes"></param>
+        /// <returns>True iff triangle is 'outside' one of the planes</returns>
+        static private bool IsTrianglesOutsidePlanes(Triangle tri, IEnumerable<Plane> planes)
+        {
+            // TODO: a triangle can be 'inside' all planes (each plane has at least one triangle vertex 'inside' the plane),
+            // yet the triangle can still not intersect the volume defined by the planes.
+            // Do we need to clip the triangle to each plane to figure out if any part of the triangle lies 'inside' all planes?
+
+            foreach (var plane in planes)
+            {
+                PlaneHalfSpace side = tri.IntersectPlane(plane);
+                if ((side & PlaneHalfSpace.NormalSide) == 0)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
     }
 }
