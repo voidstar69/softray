@@ -217,7 +217,7 @@ namespace Engine3D.Raytrace
 
         /// <summary>
         /// Intersect a triangle against this AABB.
-		/// TODO: Currently broken!
+        /// TODO: Currently broken!
         /// </summary>
         public bool IntersectsTriangle(Triangle tri)
         {

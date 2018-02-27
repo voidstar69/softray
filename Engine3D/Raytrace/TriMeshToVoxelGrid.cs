@@ -66,7 +66,7 @@ namespace Engine3D.Raytrace
                             int count = 0;
                             foreach (var tri in trisInCell)
                             {
-                                if (voxelBox.IntersectsTriangle(tri))
+                                //if (voxelBox.IntersectsTriangle(tri))
                                 {
                                     color += new Color(tri.Color);
                                     count++;
