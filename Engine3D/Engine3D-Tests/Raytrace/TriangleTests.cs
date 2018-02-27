@@ -357,14 +357,12 @@ namespace Engine3D_Tests
             const double maxMillionTriVoxelPerSec = 3.2;
 #elif APPVEYOR_PERFORMANCE_MARGINS
             // AppVeyor build server
-            const double minMillionTriVoxelPerSec = 20.9;
-            const double maxMillionTriVoxelPerSec = 23.2;
+            const double minMillionTriVoxelPerSec = 31.0;
+            const double maxMillionTriVoxelPerSec = 38.0;
 #else
             // my laptop in High Performance mode
             const double minMillionTriVoxelPerSec = 17.0;
             const double maxMillionTriVoxelPerSec = 22.1;
-            //const double minMillionTriVoxelPerSec = 20.1;
-            //const double maxMillionTriVoxelPerSec = 23.2;
 #endif
 
             const int numTriangles = 1000;
@@ -382,7 +380,7 @@ namespace Engine3D_Tests
             }
 
             DateTime startTime = DateTime.Now;
-            var voxels = new VoxelGrid(voxelGridSize, "RayIntersectVoxelGridPerformance_voxels", "");
+            var voxels = new VoxelGrid(voxelGridSize, "BuildVoxelGridPerformance_voxels", "");
             int numFilledVoxels = TriMeshToVoxelGrid.Convert(triList, voxelGridSize, voxels);
             var elapsedTime = DateTime.Now - startTime;
 
@@ -403,8 +401,8 @@ namespace Engine3D_Tests
             const double maxMillionRaysPerSec = 0.30;
 #elif APPVEYOR_PERFORMANCE_MARGINS
             // AppVeyor build server
-            const double minMillionRaysPerSec = 0.85;
-            const double maxMillionRaysPerSec = 1.0;
+            const double minMillionRaysPerSec = 0.2;
+            const double maxMillionRaysPerSec = 0.3;
 #else
             // my laptop in High Performance mode
             const double minMillionRaysPerSec = 0.14;

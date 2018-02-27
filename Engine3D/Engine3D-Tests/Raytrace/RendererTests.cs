@@ -7,6 +7,7 @@ using Color = Engine3D.Color;
 using GeometryCollection = Engine3D.Raytrace.GeometryCollection;
 using Renderer = Engine3D.Renderer;
 using Sphere = Engine3D.Raytrace.Sphere;
+using Triangle = Engine3D.Raytrace.Triangle;
 using Vector = Engine3D.Vector;
 
 namespace Engine3D_Tests
@@ -300,6 +301,26 @@ namespace Engine3D_Tests
             if (numMissingBaselines > 0)
                 Assert.Fail("{0} missing baseline images were recreated", numMissingBaselines);
         }
+
+        // TODO: this triangle is ignored by the code building the voxel grid
+/*
+        [TestMethod]
+        public void RaytraceVoxelGridWithATriangle()
+        {
+            var geometryList = new GeometryCollection();
+            geometryList.Add(new Triangle(new Vector(0, 0, 0), new Vector(1, 0, 0), new Vector(1, 1, 0), Color.Cyan.ToARGB()));
+
+            //geometryList.Add(new Plane(new Vector(0, -0.5, 0), new Vector(0, 1, 0)) { Color = Color.White });
+            //geometryList.Add(new Sphere(new Vector(0, -10000, 0), 9999.5) { Color = Color.White });
+            //geometryList.Add(new Sphere(new Vector(-0.5, 0, -0.5), 0.5) { Color = Color.Red });
+            //geometryList.Add(new Sphere(new Vector(+0.5, 0, +0.5), 0.5) { Color = Color.Green });
+            //geometryList.Add(new Sphere(new Vector(+0.5, 0, -0.5), 0.5) { Color = Color.Blue });
+            //geometryList.Add(new Sphere(new Vector(-0.5, 0, +0.5), 0.5) { Color = Color.Yellow });
+
+            objectDepth = 3.0;
+            RaytraceScenario(voxels: false, shading: true, extraGeometry: geometryList);
+        }
+*/
 
         // Basically runs forever as it attempts to render all objects as voxels
         [TestMethod, Ignore]
