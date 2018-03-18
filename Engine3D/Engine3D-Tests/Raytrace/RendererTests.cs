@@ -104,7 +104,7 @@ namespace Engine3D_Tests
             }
         }
 
-        // Release mode: 6 mins @ res 100
+        // Release mode: 11 mins @ res 100. 3 mins @ res 50. 2 mins @ res 25.
         // Release mode: (5 flags) 54 seconds @ res 400
         // TODO: very, very slow! Make this much faster!
         [TestMethod, Ignore]
@@ -127,7 +127,7 @@ namespace Engine3D_Tests
                 // TODO: add flag for quad-filtering on color lightfield
                 // TODO: add flag for path tracing?
                 RaytraceScenario(shading: shading, focalBlur: focalBlur, shadows: shadows, staticShadows: staticShadows,
-                    lightField: lfColors, lightFieldWithTris: !lfColors, subPixelRes: subPixelRes);
+                    lightField: lfColors, lightFieldWithTris: !lfColors, subPixelRes: subPixelRes, resolution: defaultResolution / 4);
             }
 
             if (numMissingBaselines > 0)
