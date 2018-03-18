@@ -102,6 +102,7 @@
   <ItemGroup>
     <Compile Include="Raytrace\RendererTests.cs" />
     <Compile Include="Raytrace\SpatialSubdivisionTests.cs" />
+    <Compile Include="Raytrace\SphereTests.cs" />
     <Compile Include="Raytrace\TriangleTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
