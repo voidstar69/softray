@@ -39,7 +39,7 @@
 
             // Which of the plane's two half-spaces does this point lie within?
             // Note that if this point lies on the plane, we assign it to an arbitrary half-space.
-            if (distToOriginAlongNormal > plane.DistanceToOrigin)
+            if (distToOriginAlongNormal >= plane.DistanceToOrigin)
             {
                 return PlaneHalfSpace.NormalSide;
             }

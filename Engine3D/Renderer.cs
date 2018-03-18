@@ -75,6 +75,7 @@ namespace Engine3D
         public bool rayTraceLightField = false;
         public bool rayTraceSubdivision = true;
         public bool rayTracePathTracing = false;
+        public bool rayTraceVoxels = false;
         public bool rayTraceFocalBlur = true;   // TODO: focal blur only works if rayTraceSubPixelRes > 1. Give focal blur an indepedant sub-resolution.
         public double rayTraceFocalDepth = 1.5; // the depth from the camera at which surfaces are exactly in focus
         public double rayTraceFocalBlurStrength = 10.0;
@@ -115,6 +116,9 @@ namespace Engine3D
 
         // Technique for calculating ambient occlusion (during raytracing)
         private AmbientOcclusionMethod ambientOcclusionMethod;
+
+        // 3D grid of voxels
+        private VoxelGrid voxels;
 
 //#if DEBUG
 
@@ -222,7 +226,7 @@ namespace Engine3D
             surface = new Surface(width, height, new int[1]);
 
             // Default cache path
-            CachePath = "c:/temp";
+            CachePath = "./cache";
         }
 
         #endregion
@@ -1498,6 +1502,10 @@ namespace Engine3D
         {
             Contract.Requires(instance != null);
 
+#if !SILVERLIGHT 
+            Directory.CreateDirectory(CachePath);
+#endif
+
             // TODO: this does lots of unneccessary transformation and lighting work!!!
             instance.InitRender(calcLightingIntensity);
 
@@ -1555,6 +1563,28 @@ namespace Engine3D
                     rootGeometry = geometryWithPlane;
                 }
 */
+            }
+
+            if (rayTraceVoxels && voxels == null)
+            {
+                const int voxelGridSize = 64;
+
+                // Copy the triangles from the simply geometry into a list
+                var triList = new List<Raytrace.Triangle>();
+                for (int i = 0; i < geometry_simple.Count; i++)
+                {
+                    var tri = (Raytrace.Triangle)geometry_simple[i];
+                    triList.Add(tri);
+                }
+
+                var instanceKey = string.Format("voxels_tri{0}_vert{1}", instance.Model.Triangles.Count, instance.Model.Vertices.Count);
+                voxels = new VoxelGrid(voxelGridSize, instanceKey, CachePath); // TODO: this assumes only one instance globally!
+                if (!voxels.HasData)
+                {
+                    TriMeshToVoxelGrid.Convert(triList, voxelGridSize, voxels);
+                }
+
+                rootGeometry = voxels;
             }
 
             if (lightFieldTriMethod == null)
@@ -1617,34 +1647,6 @@ namespace Engine3D
                 rootGeometry = lightFieldColorMethod;
             }
             lightFieldColorMethod.Enabled = rayTraceLightField && !lightFieldHasTris;
-
-
-/*
-            // TODO: test out Voxel geometry
-            const int voxelGridSize = 128;
-            var voxelData = new uint[voxelGridSize, voxelGridSize, voxelGridSize];
-            var random = new Random(rayTraceRandomSeed);
-
-            for (var x = 0; x < voxelGridSize; x++)
-            {
-                for (var y = 0; y < voxelGridSize; y++)
-                {
-                    for (var z = 0; z < voxelGridSize; z++)
-                    {
-                        voxelData[x, y, z] = (random.Next(2) == 0 ? 0 : (uint)random.Next());
-                    }
-                }
-            }
-
-            var geometryGroup = new GeometryCollection();
-            //uint color1 = 0; //  Color.Red.ToARGB();
-            //uint color2 = Color.Green.ToARGB();
-            //geometryGroup.Add(new VoxelGrid(2, new uint[] { color1, color2, color1, color2, color1, color2, color1, color2 }));
-            geometryGroup.Add(new VoxelGrid(voxelGridSize, voxelData));
-            //geometryGroup.Add(rootGeometry);
-            rootGeometry = geometryGroup;
-*/
-
 
             // Ensure that we don't attempt to draw outside the 2D surface.
             rayTraceStartRow = Math.Min(Math.Max(0, rayTraceStartRow), height - 1);

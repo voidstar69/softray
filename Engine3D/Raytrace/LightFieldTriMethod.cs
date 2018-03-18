@@ -152,6 +152,7 @@ namespace Engine3D.Raytrace
 
             // Intersect primary ray against closest/likely/best triangle (from lightfield cache)
             triIndex = (int)lfCacheEntry - 2; // discount empty and replacement cache values
+            // TODO: Contracts analyser says assert unproven
             Contract.Assert(triIndex >= 0);
             var tri = geometry_simple[triIndex] as Raytrace.Triangle;
             IntersectionInfo intersection = tri.IntersectRay(rayStart, rayDir, context); // intersect ray against triangle

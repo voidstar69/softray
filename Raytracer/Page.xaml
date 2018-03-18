@@ -1,0 +1,71 @@
+﻿<UserControl x:Class="Raytracer.Page"
+    xmlns="http://schemas.microsoft.com/client/2007" 
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" mc:Ignorable="d" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" Height="403" Width="888">
+    <Canvas x:Name="baseCanvas" Background="Black">
+        <Canvas x:Name="canvas" Background="Black" Loaded="Canvas_Loaded"/>
+
+        <HyperlinkButton x:Name="searchButton" Content="Search" TargetName="_self"
+                         NavigateUri="/Default.aspx"
+                         Canvas.Left="0" Canvas.Top="15" Height="20" Width="50"
+                         ToolTipService.ToolTip="Go back to Search page">
+        </HyperlinkButton>
+
+        <HyperlinkButton x:Name="previewButton" Content="Preview" TargetName="_self"
+                         Canvas.Left="50" Canvas.Top="15" Height="20" Width="50"
+                         ToolTipService.ToolTip="Go back to Preview page">
+        </HyperlinkButton>
+
+        <!--        
+        <ComboBox x:Name="shadingComboBox" Canvas.Left="105" Canvas.Top="10" Height="30" Width="135" ToolTipService.ToolTip="Shading" SelectionChanged="ShadingComboBox_SelectionChanged" SelectedIndex="1">
+        </ComboBox>
+-->
+
+        <ComboBox x:Name="lightingComboBox" Canvas.Left="106" Canvas.Top="8" Height="30" Width="135" ToolTipService.ToolTip="Lighting" SelectionChanged="LightingComboBox_SelectionChanged" SelectedIndex="2">
+            <ComboBoxItem Content="Directional Lighting"/>
+            <ComboBoxItem Content="Point Lighting"/>
+            <ComboBoxItem Content="Specular Lighting"/>
+        </ComboBox>
+
+        <ComboBox x:Name="renderMethodComboBox" Canvas.Left="251" Canvas.Top="8" Height="30" Width="135" ToolTipService.ToolTip="Drawing Style" SelectionChanged="RenderMethodComboBox_SelectionChanged" SelectedIndex="1">
+            <ComboBoxItem Content="Rasteriser"/>
+            <ComboBoxItem Content="Raytrace Lightfield"/>
+            <ComboBoxItem Content="Raytrace Subdivided"/>
+            <ComboBoxItem Content="Raytrace Bruteforce"/>
+        </ComboBox>
+
+        <ComboBox x:Name="resolutionComboBox" Canvas.Left="396" Canvas.Top="8" Height="30" Width="135" ToolTipService.ToolTip="Resolution" SelectionChanged="ResolutionComboBox_SelectionChanged">
+            <ComboBoxItem Content="1x"/>
+            <ComboBoxItem Content="2x"/>
+            <ComboBoxItem Content="3x"/>
+            <ComboBoxItem Content="4x"/>
+            <ComboBoxItem Content="5x"/>
+            <ComboBoxItem Content="10x"/>
+            <ComboBoxItem Content="25x"/>
+            <ComboBoxItem Content="50x"/>
+            <ComboBoxItem Content="100x"/>
+            <ComboBoxItem Content="200x"/>
+        </ComboBox>
+
+        <ComboBox x:Name="shadowComboBox" Canvas.Left="541" Canvas.Top="8" Height="30" Width="135" ToolTipService.ToolTip="Shadows" SelectionChanged="ShadowComboBox_SelectionChanged" SelectedIndex="1">
+            <ComboBoxItem Content="No Shading"/>
+            <ComboBoxItem Content="Shading"/>
+            <ComboBoxItem Content="Shadows"/>
+            <ComboBoxItem Content="Shadows + Shading"/>
+            <ComboBoxItem Content="Ambient Occlusion"/>
+            <ComboBoxItem Content="AO + Shadows"/>
+            <ComboBoxItem Content="AO + Shading"/>
+            <ComboBoxItem Content="AO + Shadows + Shading"/>
+        </ComboBox>
+
+        <ComboBox x:Name="subPixelComboBox" Canvas.Left="686" Canvas.Top="8" Height="30" Width="135" ToolTipService.ToolTip="Sub Pixel amount" SelectionChanged="SubPixelComboBox_SelectionChanged" SelectedIndex="0">
+            <ComboBoxItem Content="1x"/>
+            <ComboBoxItem Content="2x"/>
+            <ComboBoxItem Content="3x"/>
+            <ComboBoxItem Content="4x"/>
+        </ComboBox>
+
+        <TextBox x:Name="FrameInfoTextBox" Canvas.Top="650"></TextBox>
+
+        <TextBox x:Name="LoggerTextBox" Canvas.Top="30"></TextBox>
+    </Canvas>
+</UserControl>

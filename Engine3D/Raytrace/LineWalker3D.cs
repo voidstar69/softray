@@ -17,18 +17,20 @@ namespace Engine3D.Raytrace
         public static IEnumerable<Vector> WalkLine(Vector start, Vector end, double minStep = 1.0)
         {
             var delta = end - start;
-            var absDelta = new Vector(Math.Abs(delta.x), Math.Abs(delta.y), Math.Abs(delta.z));
-
-            var maxDimSize = Math.Max(Math.Max(delta.x, delta.y), delta.z);
-            int numSteps = (int)(maxDimSize / minStep);
-            delta *= minStep / maxDimSize;
-
-            var pos = start;
-            for(var step = 0; step < numSteps; step++)
-            //for (double x = startX, y = startY; x != endX && y != endY; x += dx, y += dy)
+            if (!delta.IsZeroVector)
             {
-                yield return pos;
-                pos += delta;
+                var absDelta = new Vector(Math.Abs(delta.x), Math.Abs(delta.y), Math.Abs(delta.z));
+                var maxDimSize = Math.Max(Math.Max(absDelta.x, absDelta.y), absDelta.z);
+                int numSteps = Math.Max(1, (int)(maxDimSize / minStep));
+                delta *= minStep / maxDimSize;
+
+                var pos = start;
+                for (var step = 0; step < numSteps; step++)
+                //for (double x = startX, y = startY; x != endX && y != endY; x += dx, y += dy)
+                {
+                    yield return pos;
+                    pos += delta;
+                }
             }
         }
 

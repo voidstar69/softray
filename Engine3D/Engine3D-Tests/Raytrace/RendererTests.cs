@@ -7,6 +7,7 @@ using Color = Engine3D.Color;
 using GeometryCollection = Engine3D.Raytrace.GeometryCollection;
 using Renderer = Engine3D.Renderer;
 using Sphere = Engine3D.Raytrace.Sphere;
+using Triangle = Engine3D.Raytrace.Triangle;
 using Vector = Engine3D.Vector;
 
 namespace Engine3D_Tests
@@ -14,8 +15,8 @@ namespace Engine3D_Tests
     [TestClass]
     public class RendererTests
     {
-        private const int maxImageWidth = 100;
-        private const int maxImageHeight = 100;
+        private const int maxImageWidth = 400;
+        private const int maxImageHeight = 400;
 
         // Faster regression test
         private const int defaultResolution = 100;
@@ -36,6 +37,7 @@ namespace Engine3D_Tests
         //private readonly ImageFormat bitmapFormat = ImageFormat.Png;
 
         private string modelFileName = "../../obj.3ds";
+        private string raytraceTestSuffix;
         private double objectDepth = 1.0; // depth of object (in view space)
 
         //private const double yawDegrees = 45.0;
@@ -240,89 +242,6 @@ namespace Engine3D_Tests
                 Assert.Fail("{0} missing baseline images were recreated", numMissingBaselines);
         }
 
-        // skip all tests up until a specific test, then run it and all the rest
-/*
-        private const string startFromTest = "raytrace/100x100/noShading_staticShadows_lightField";
-        private bool skipTest = true;
-*/
-
-        // TODO: add flag for quad-filtering on color lightfield
-        private void RaytraceScenario(bool shading = true, bool focalBlur = false, bool shadows = false, bool staticShadows = false,
-            bool lightField = false, bool lightFieldWithTris = false, bool pathTracing = false, int subPixelRes = 1, int resolution = 100,
-            double pitchDegrees = defaultPitchDegrees, double yawDegrees = defaultYawDegrees, double rollDegrees = defaultRollDegrees,
-            double focalDepth = -1, GeometryCollection extraGeometry = null)
-        {
-            using (var renderer = new Renderer())
-            {
-                RendererSetup(renderer, modelFileName, pitchDegrees, yawDegrees, rollDegrees, objectDepth, resolution);
-
-                // TODO: raytracer has slight difference on cube edges between Release and Debug mode. Rounding error?
-                renderer.rayTrace = true;
-                renderer.rayTraceSubdivision = true;
-                renderer.rayTraceShading = shading;
-                renderer.rayTraceFocalBlur = focalBlur;
-                renderer.rayTraceFocalDepth = (Math.Abs(focalDepth + 1) < 0.001 ? objectDepth + 0.5 : focalDepth);
-                renderer.rayTraceSubPixelRes = subPixelRes;
-                renderer.rayTracePathTracing = pathTracing;
-
-                renderer.rayTraceShadows = shadows; // TODO: adding this flag seems to increase test runtime massively! (during focal blur?)
-                renderer.rayTraceShadowsStatic = staticShadows;
-                // TODO: ambient occlusion has some instability, sometimes causes banding, and fails regression testing
-                //renderer.rayTraceAmbientOcclusion = true; // = flags[2];
-                // TODO: non-cached AO has many differences to cached AO
-                //renderer.ambientOcclusionEnableCache = false;
-
-                // avoid caching static shadows to disk, as this can produce a slightly different image on each test execution
-                renderer.CacheStaticShadowsToFile = false;
-
-                // lightfields must be used in x64 mode to avoid 'cannot create MM view' errors
-                // TODO: unit testing lightfields with memory-mapped files seems to cause an error for later tests
-                renderer.rayTraceLightField = lightField;
-                renderer.LightFieldStoresTriangles = lightFieldWithTris;
-
-                // raytrace any extra geometry beyond the triangle model?
-                if (extraGeometry != null)
-                    renderer.ExtraGeometryToRaytrace = extraGeometry;
-
-                // when shadows are disabled, static shadows flag has no effect
-                if (renderer.rayTraceShadowsStatic && !renderer.rayTraceShadows)
-                    return;
-
-                var dirPath = "raytrace/" + resolution + 'x' + resolution;
-                var testName = dirPath + '/' +
-                    (renderer.rayTracePathTracing ? "pathTracing_" : "") +
-                    (renderer.rayTraceShading ? "shading" : "noShading") +
-                    (renderer.rayTraceShadows ? (renderer.rayTraceShadowsStatic ? "_staticShadows" : "_shadows") : "") +
-                    (renderer.rayTraceAmbientOcclusion ? "_AO" : "") +
-                    (lightField && lightFieldWithTris ? "_lightFieldTri" : "") + (lightField && !lightFieldWithTris ? "_lightFieldColor" : "") +
-                    (renderer.rayTraceFocalBlur ? "_focalBlur" : "") +
-                    (focalBlur ? "x" + subPixelRes : (subPixelRes > 1 ? "_" + subPixelRes + "xAA" : "")) +
-                    (extraGeometry != null ? ("_" + (extraGeometry.Count + 1) + "_geometry") : "");
-
-/*
-                // skip all tests up until a specific test, then run it and all the rest
-                if (testName == startFromTest)
-                    skipTest = false;
-                if (skipTest)
-                    return;
-*/
-
-                Directory.CreateDirectory(candidatePath + dirPath);
-                Directory.CreateDirectory(baselinePath + dirPath);
-
-                try
-                {
-                    RenderAndTest(testName, renderer, resolution, resolution);
-                }
-                catch(Exception)
-                {
-                    // TODO: reports test name, but breaks stack trace links.
-                    //Assert.Fail("{0}: threw exception", testName);
-                    throw;
-                }
-            }
-        }
-
         [TestMethod]
         public void PathTracePrimitivesTest()
         {
@@ -357,7 +276,186 @@ namespace Engine3D_Tests
             RaytraceScenario(pathTracing: true, shading: false, focalBlur: true, focalDepth: depthOfFocus, subPixelRes: 4);
             RaytraceScenario(pathTracing: true, shading: false, focalBlur: true, focalDepth: depthOfFocus, subPixelRes: 8);
         }
-        
+
+        // Release mode: 1 seconds @ res 100
+        // Debug mode with contracts: 1 seconds @ res 100
+        [TestMethod]
+        public void RaytraceVoxelGrid()
+        {
+            objectDepth = 4.0;
+            RaytraceScenario(voxels: true);
+
+            if (numMissingBaselines > 0)
+                Assert.Fail("{0} missing baseline images were recreated", numMissingBaselines);
+        }
+
+        // Release mode: 1 seconds @ res 100
+        // Debug mode with contracts: 5 seconds @ res 100
+        [TestMethod]
+        public void RaytraceVoxelGridWithOtherObject()
+        {
+            modelFileName = "../../obj2.3ds";
+            objectDepth = 3.0;
+            RaytraceScenario(pitchDegrees: 0, yawDegrees: 170, rollDegrees: 0, voxels: true, shading: false);
+
+            if (numMissingBaselines > 0)
+                Assert.Fail("{0} missing baseline images were recreated", numMissingBaselines);
+        }
+
+        // TODO: this triangle is ignored by the code building the voxel grid
+/*
+        [TestMethod]
+        public void RaytraceVoxelGridWithATriangle()
+        {
+            var geometryList = new GeometryCollection();
+            geometryList.Add(new Triangle(new Vector(0, 0, 0), new Vector(1, 0, 0), new Vector(1, 1, 0), Color.Cyan.ToARGB()));
+
+            //geometryList.Add(new Plane(new Vector(0, -0.5, 0), new Vector(0, 1, 0)) { Color = Color.White });
+            //geometryList.Add(new Sphere(new Vector(0, -10000, 0), 9999.5) { Color = Color.White });
+            //geometryList.Add(new Sphere(new Vector(-0.5, 0, -0.5), 0.5) { Color = Color.Red });
+            //geometryList.Add(new Sphere(new Vector(+0.5, 0, +0.5), 0.5) { Color = Color.Green });
+            //geometryList.Add(new Sphere(new Vector(+0.5, 0, -0.5), 0.5) { Color = Color.Blue });
+            //geometryList.Add(new Sphere(new Vector(-0.5, 0, +0.5), 0.5) { Color = Color.Yellow });
+
+            objectDepth = 3.0;
+            RaytraceScenario(voxels: false, shading: true, extraGeometry: geometryList);
+        }
+*/
+
+        // Basically runs forever as it attempts to render all objects as voxels
+        [TestMethod, Ignore]
+        public void RaytraceVoxelGridWithAllObjects()
+        {
+//            const string dir = "../../../../Raytracer/";
+            const string dir = @"C:\Src\SVN\ModelLibrary\database\3dModels\";
+            const string skipUntilModel = "kentaur.3ds";
+            bool renderModel = false;
+
+            foreach(var filePath in Directory.EnumerateFiles(dir, "*.3DS"))
+            {
+                modelFileName = filePath;
+                raytraceTestSuffix = filePath.Replace(dir, "").Replace(".3DS", "");
+                objectDepth = 3.0;
+
+                if (raytraceTestSuffix == skipUntilModel)
+                    renderModel = true;
+
+                try
+                {
+                    if (renderModel)
+                    {
+                        Console.WriteLine("Rendering model: {0}", raytraceTestSuffix);
+                        RaytraceScenario(/*pitchDegrees: -45, yawDegrees: 135, rollDegrees: 0, */ voxels: true, shading: true, resolution: 400);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Skipping render of model: {0}", raytraceTestSuffix);
+                    }
+                }
+                catch (FormatException ex)
+                {
+                    // TODO: Some 3DS files have no entities in model. Model.Load3ds throws this exeception.
+                    Console.WriteLine("FormatException: {0}", ex);
+                }
+                catch (OutOfMemoryException ex)
+                {
+                    // TODO: TriMeshToVoxelGrid.Convert sometimes runs out of memory allocating voxelNormals 3D array
+                    Console.WriteLine("OutOfMemoryException: {0}", ex);
+                }
+            }
+
+            if (numMissingBaselines > 0)
+                Assert.Fail("{0} missing baseline images were recreated", numMissingBaselines);
+        }
+
+        // skip all tests up until a specific test, then run it and all the rest
+/*
+        private const string startFromTest = "raytrace/100x100/noShading_staticShadows_lightField";
+        private bool skipTest = true;
+*/
+
+        // TODO: add flag for quad-filtering on color lightfield
+        private void RaytraceScenario(bool shading = true, bool focalBlur = false, bool shadows = false, bool staticShadows = false,
+            bool lightField = false, bool lightFieldWithTris = false, bool pathTracing = false, bool voxels = false,
+            int subPixelRes = 1, int resolution = defaultResolution, double pitchDegrees = defaultPitchDegrees,
+            double yawDegrees = defaultYawDegrees, double rollDegrees = defaultRollDegrees, double focalDepth = -1, GeometryCollection extraGeometry = null)
+        {
+            using (var renderer = new Renderer())
+            {
+                RendererSetup(renderer, modelFileName, pitchDegrees, yawDegrees, rollDegrees, objectDepth, resolution);
+
+                // TODO: raytracer has slight difference on cube edges between Release and Debug mode. Rounding error?
+                renderer.rayTrace = true;
+                renderer.rayTraceSubdivision = true;
+                renderer.rayTraceShading = shading;
+                renderer.rayTraceFocalBlur = focalBlur;
+                renderer.rayTraceFocalDepth = (Math.Abs(focalDepth + 1) < 0.001 ? objectDepth + 0.5 : focalDepth);
+                renderer.rayTraceSubPixelRes = subPixelRes;
+                renderer.rayTracePathTracing = pathTracing;
+                renderer.rayTraceVoxels = voxels;
+
+                renderer.rayTraceShadows = shadows; // TODO: adding this flag seems to increase test runtime massively! (during focal blur?)
+                renderer.rayTraceShadowsStatic = staticShadows;
+                // TODO: ambient occlusion has some instability, sometimes causes banding, and fails regression testing
+                //renderer.rayTraceAmbientOcclusion = true; // = flags[2];
+                // TODO: non-cached AO has many differences to cached AO
+                //renderer.ambientOcclusionEnableCache = false;
+
+                // avoid caching static shadows to disk, as this can produce a slightly different image on each test execution
+                renderer.CacheStaticShadowsToFile = false;
+
+                // lightfields must be used in x64 mode to avoid 'cannot create MM view' errors
+                // TODO: unit testing lightfields with memory-mapped files seems to cause an error for later tests
+                renderer.rayTraceLightField = lightField;
+                renderer.LightFieldStoresTriangles = lightFieldWithTris;
+
+                // raytrace any extra geometry beyond the triangle model?
+                if (extraGeometry != null)
+                    renderer.ExtraGeometryToRaytrace = extraGeometry;
+
+                // when shadows are disabled, static shadows flag has no effect
+                if (renderer.rayTraceShadowsStatic && !renderer.rayTraceShadows)
+                    return;
+
+                var dirPath = "raytrace/" + resolution + 'x' + resolution;
+                var testName = dirPath + '/' +
+                    (renderer.rayTraceVoxels ? "voxels_" : "") +
+                    (renderer.rayTracePathTracing ? "pathTracing_" : "") +
+                    (renderer.rayTraceShading ? "shading" : "noShading") +
+                    (renderer.rayTraceShadows ? (renderer.rayTraceShadowsStatic ? "_staticShadows" : "_shadows") : "") +
+                    (renderer.rayTraceAmbientOcclusion ? "_AO" : "") +
+                    (lightField && lightFieldWithTris ? "_lightFieldTri" : "") + (lightField && !lightFieldWithTris ? "_lightFieldColor" : "") +
+                    (renderer.rayTraceFocalBlur ? "_focalBlur" : "") +
+                    (focalBlur ? "x" + subPixelRes : (subPixelRes > 1 ? "_" + subPixelRes + "xAA" : "")) +
+                    (extraGeometry != null ? ("_" + (extraGeometry.Count + 1) + "_geometry") : "") +
+                    raytraceTestSuffix;
+
+/*
+                // skip all tests up until a specific test, then run it and all the rest
+                if (testName == startFromTest)
+                    skipTest = false;
+                if (skipTest)
+                    return;
+*/
+
+                Directory.CreateDirectory(candidatePath + dirPath);
+                Directory.CreateDirectory(baselinePath + dirPath);
+
+                try
+                {
+                    RenderAndTest(testName, renderer, resolution, resolution);
+                }
+                catch(Exception ex)
+                {
+                    // TODO: reports test name, but breaks stack trace links.
+                    //Assert.Fail("{0}: threw exception", testName);
+                    Console.WriteLine(ex);
+                    throw;
+                }
+            }
+        }
+
+       
         // Release mode: 16-23 seconds @ res 400; 1 sec @ res 100
         // Debug mode with contracts: 2 sec @ res 100
         [TestMethod]

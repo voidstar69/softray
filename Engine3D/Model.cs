@@ -103,6 +103,7 @@ namespace Engine3D
         }
     }
 
+    // A 3D model that is scaled to fit in the unit cube, centred at origin.
     // TODO: make this class immutable. The loading should be triggered in the constructor,
     // and there should be no methods that modify state.
     public class Model

@@ -4,3 +4,16 @@ obj
 bin
 candidate images
 /packages
+/.vs/Engine3D/v15/Server/sqlite3/db.lock
+/.vs/Engine3D/v15/Server/sqlite3/storage.ide
+/Raytracer/.vs/Raytracer/v15/Server/sqlite3/db.lock
+/Raytracer/.vs/Raytracer/v15/Server/sqlite3/storage.ide
+/Raytracer/ClientBin
+/Raytracer/*.3DS
+/Engine3D/Engine3D-Tests/baseline images/raytrace/400x400
+/Engine3D/Engine3D-Tests/baseline images/raytrace/50x50/*.bmp
+TestResults
+3dModels
+3dRenders
+Bin
+cache

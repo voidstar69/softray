@@ -126,6 +126,7 @@
     <Compile Include="Raytrace\Sphere.cs" />
     <Compile Include="Raytrace\Texture3DCache.cs" />
     <Compile Include="Raytrace\Triangle.cs" />
+    <Compile Include="Raytrace\TriMeshToVoxelGrid.cs" />
     <Compile Include="Raytrace\VoxelGrid.cs" />
     <Compile Include="Renderer.cs" />
     <Compile Include="Scene.cs" />
