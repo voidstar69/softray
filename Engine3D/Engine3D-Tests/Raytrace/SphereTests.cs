@@ -28,14 +28,24 @@ namespace Engine3D_Tests.Raytrace
         }
 
         [TestMethod]
+        public void ConvertLineSimple()
+        {
+            var sphere = new Sphere(Vector.Zero, 1.0);
+            Vector pt1, pt2;
+            sphere.ConvertLine(new Sphere.LatLong(Math.PI, 0), new Sphere.LatLong(Math.PI / 2, 0), out pt1, out pt2);
+            Assert.IsTrue(new Vector(0, 0, -1) == pt1);
+            Assert.IsTrue(new Vector(1, 0, 0) == pt2);
+        }
+
+        [TestMethod]
         public void IntersectLineSimple()
         {
             var sphere = new Sphere(Vector.Zero, 1.0);
             Sphere.LatLong spherePt1, spherePt2;
             sphere.IntersectLine(Vector.Zero, Vector.Right, out spherePt1, out spherePt2);
-            Assert.AreEqual(-1.5707963267948966, spherePt1.horizAngle);
+            Assert.AreEqual(-Math.PI / 2, spherePt1.horizAngle);
             Assert.AreEqual(0.0, spherePt1.vertAngle);
-            Assert.AreEqual(1.5707963267948966, spherePt2.horizAngle);
+            Assert.AreEqual(Math.PI / 2, spherePt2.horizAngle);
             Assert.AreEqual(0.0, spherePt2.vertAngle);
         }
 
@@ -60,6 +70,16 @@ namespace Engine3D_Tests.Raytrace
             Assert.AreEqual(double.NaN, spherePt1.vertAngle);
             Assert.AreEqual(double.NaN, spherePt2.horizAngle);
             Assert.AreEqual(double.NaN, spherePt2.vertAngle);
+        }
+
+        [TestMethod]
+        public void ConvertDegenerateLine()
+        {
+            var sphere = new Sphere(Vector.Zero, 1.0);
+            Vector pt1, pt2;
+            sphere.ConvertLine(new Sphere.LatLong(0, 0), new Sphere.LatLong(0, 0), out pt1, out pt2);
+            Assert.AreEqual(new Vector(0, 0, 1), pt1);
+            Assert.AreEqual(new Vector(0, 0, 1), pt2);
         }
 #endif
     }
