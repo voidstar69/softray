@@ -26,5 +26,18 @@ namespace Engine3D_Tests.Raytrace
             Assert.IsFalse(sphere.ContainsPoint(Vector.Right * 1.0001));
             Assert.IsFalse(sphere.ContainsPoint(Vector.Right * 2));
         }
+
+        [TestMethod]
+        public void IntersectLineTest()
+        {
+            var sphere = new Sphere(Vector.Zero, 1.0);
+
+            Sphere.LatLong coord1, coord2;
+            Vector linePt1, linePt2;
+
+sphere.ConvertLine(coord1, coord2, out linePt1, out linePt2);
+
+            //TODO: Asserts
+        }
     }
 }
