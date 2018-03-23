@@ -9,6 +9,8 @@ namespace Engine3D_Tests.Raytrace
     [TestClass]
     public class SphereTests
     {
+        private Random random = new Random();
+
         [TestMethod, ExpectedException(typeof(NotImplementedException))]
         public void IntersectLineSegment()
         {
@@ -30,11 +32,15 @@ namespace Engine3D_Tests.Raytrace
         [TestMethod]
         public void ContainsPoint2()
         {
-            var sphere = new Sphere(Vector.Zero, 1.0);
+var centre= Vector.Zero;
+            var sphere = new Sphere(centre, 1.0);
 
 for(int i=0;i<1000;i++)
 {
 // randomly generate a point and test it
+  var pt = MakeRandomVector(2, 2, 2);
+         
+Assert.AreEqual(centre.Dist(pt)<1,sphere.ContainsPoint(pt));
 }
             Assert.IsTrue(sphere.ContainsPoint(Vector.Zero));
             Assert.IsTrue(sphere.ContainsPoint(Vector.Right * 0.999));
@@ -98,5 +104,22 @@ for(int i=0;i<1000;i++)
             Assert.AreEqual(new Vector(0, 0, 1), pt2);
         }
 #endif
+
+private Vector MakeRandomVector(double sizeX, double sizeY, double sizeZ)
+        {
+            return new Vector(NextRandomDouble() * sizeX, NextRandomDouble() * sizeY, NextRandomDouble() * sizeZ);
+        }
+
+        private Vector MakeRandomVector(double minX, double maxX, double minY, double maxY, double minZ, double maxZ)
+        {
+            return new Vector((maxX - minX) * NextRandomDouble() + minX,
+                              (maxY - minY) * NextRandomDouble() + minY,
+                              (maxZ - minZ) * NextRandomDouble() + minZ);
+        }
+
+        private double NextRandomDouble()
+        {
+            return random.NextDouble();
+        }
     }
 }
