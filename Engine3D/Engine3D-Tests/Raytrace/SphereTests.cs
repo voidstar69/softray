@@ -32,15 +32,17 @@ namespace Engine3D_Tests.Raytrace
         [TestMethod]
         public void ContainsPoint2()
         {
-var centre= Vector.Zero;
-            var sphere = new Sphere(centre, 1.0);
+          const double radius = 2;
+          var centre = Vector.Zero;
 
-for(int i=0;i<1000;i++)
+            var sphere = new Sphere(centre, radius);
+
+for(int i=0;i<10000;i++)
 {
 // randomly generate a point and test it
-  var pt = MakeRandomVector(2, 2, 2);
+  var pt = MakeRandomVector(2*radius, 2*radius, 2*radius);
          
-Assert.AreEqual(centre.Dist(pt)<1,sphere.ContainsPoint(pt));
+Assert.AreEqual(centre.Distance(pt)<radius,sphere.ContainsPoint(pt));
 }
             Assert.IsTrue(sphere.ContainsPoint(Vector.Zero));
             Assert.IsTrue(sphere.ContainsPoint(Vector.Right * 0.999));
