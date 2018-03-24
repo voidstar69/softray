@@ -42,7 +42,7 @@ for(int i=0;i<10000;i++)
 // randomly generate a point and test it
   var pt = MakeRandomVector(2*radius, 2*radius, 2*radius);
          
-Assert.AreEqual(centre.Distance(pt) <= radius, sphere.ContainsPoint(pt), “Pt” + i + “ failed”);
+Assert.AreEqual(centre.Distance(pt) <= radius, sphere.ContainsPoint(pt), string.Format(“Pt {0} failed”, i));
 }
         }
 
