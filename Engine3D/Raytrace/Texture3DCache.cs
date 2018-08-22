@@ -92,9 +92,9 @@ namespace Engine3D.Raytrace
         {
             // TODO: sometimes a surface point coordinate is very slightly outside the unit cube (i.e. Z coordinate of 0.50000000001)
             // TODO: clamp 'close' coordinates to the unit cube?
-            Assert.IsTrue(-0.5 <= pos.x && pos.x <= 0.5, "Texture3D coordinate is outside unit cube");
-            Assert.IsTrue(-0.5 <= pos.y && pos.y <= 0.5, "Texture3D coordinate is outside unit cube");
-            Assert.IsTrue(-0.5 <= pos.z && pos.z <= 0.5, "Texture3D coordinate is outside unit cube");
+            Contract.Assert(-0.5 <= pos.x && pos.x <= 0.5, "Texture3D coordinate is outside unit cube");
+            Contract.Assert(-0.5 <= pos.y && pos.y <= 0.5, "Texture3D coordinate is outside unit cube");
+            Contract.Assert(-0.5 <= pos.z && pos.z <= 0.5, "Texture3D coordinate is outside unit cube");
             var cacheIndex = (int)((pos.x + 0.5) * (cacheSize - 1)) * cacheSize * cacheSize +
                                 (int)((pos.y + 0.5) * (cacheSize - 1)) * cacheSize +
                                 (int)((pos.z + 0.5) * (cacheSize - 1));
