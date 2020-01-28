@@ -187,16 +187,16 @@ namespace Engine3D_Tests
             Console.WriteLine("Performance: {0} million ray/tri per second", millionRayTriPerSec);
         }
 
-        [TestMethod, Ignore]
+        [TestMethod]
         public void RayIntersectTreeCorrectness()
         {
             const int numTriangles = 100;
             SpatialSubdivision tree;
             var triList = BuildRandomTree(numTriangles, maxTreeDepth: 10, maxGeometryPerNode: 5, randomSeed: 12345, tree: out tree);
             Assert.AreEqual(8, tree.TreeDepth);
-            Assert.AreEqual(83, tree.NumNodes);
-            Assert.AreEqual(42, tree.NumLeafNodes);
-            Assert.AreEqual(41, tree.NumInternalNodes);
+            Assert.AreEqual(93, tree.NumNodes);
+            Assert.AreEqual(47, tree.NumLeafNodes);
+            Assert.AreEqual(46, tree.NumInternalNodes);
 
             var triSet = new GeometryCollection();
             foreach(var tri in triList)
@@ -210,8 +210,8 @@ namespace Engine3D_Tests
             {
                 var start = MakeRandomVector(triangleSpaceSize);
                 var dir = MakeRandomVector(-1, 1, -1, 1, -1, 1);
-                var info = tree.IntersectRay(start, dir, context);
                 var infoBase = triSet.IntersectRay(start, dir, context);
+                var info = tree.IntersectRay(start, dir, context);
                 Assert.AreEqual(infoBase == null, info == null, "Ray " + i + ": SpatialSubdivision and GeometryCollection differ in intersection status");
                 if (info != null)
                 {
@@ -276,7 +276,9 @@ public void TreeCorrectness1()
                 var v2 = v1 + MakeRandomVector(triangleExtentSize);
                 var v3 = v1 + MakeRandomVector(triangleExtentSize);
                 var color = (uint)random.Next();
-                triangles.Add(new Triangle(v1, v2, v3, color));
+                var tri = new Triangle(v1, v2, v3, color);
+                tri.TriangleIndex = i;
+                triangles.Add(tri);
             }
             return triangles.AsReadOnly();
         }
@@ -284,7 +286,8 @@ public void TreeCorrectness1()
         private AxisAlignedBox GetBoundingBoxOfRandomTriangles()
         {
             // TODO: ensure this remains in sync with MakeRandomVector
-            return new AxisAlignedBox(new Vector(0, 0, 0), new Vector(triangleSpaceSize, triangleSpaceSize, triangleSpaceSize));
+            return new AxisAlignedBox(new Vector(0, 0, 0),
+                new Vector(triangleSpaceSize + triangleExtentSize, triangleSpaceSize + triangleExtentSize, triangleSpaceSize + triangleExtentSize));
         }
 
         private Vector MakeRandomVector(double size)

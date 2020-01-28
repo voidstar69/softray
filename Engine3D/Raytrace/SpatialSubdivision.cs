@@ -7,6 +7,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.Linq;
 
 namespace Engine3D.Raytrace
 {
@@ -229,6 +230,16 @@ namespace Engine3D.Raytrace
                 }
             }
 
+            //public bool RecursiveTriangleFind(int triIndex)
+            //{
+            //    if (geometry.Any(t => t.TriangleIndex == triIndex))
+            //        return true;
+
+            //    normalSide.RecursiveTriangleFind(triIndex);
+            //    backSide.RecursiveTriangleFind(triIndex);
+
+            //}
+
             /// <summary>
             /// Current node is a leaf node, so perform any processing required for leaf nodes.
             /// </summary>
@@ -279,6 +290,17 @@ namespace Engine3D.Raytrace
             Node.totalTreeDepth = 0;
             Node.totalNodes = 0;
             Node.leafNodes = 0;
+
+            // all triangle vertices must lie within the bounding box
+            foreach (var tri in geometry)
+            {
+                if (!boundingBox.ContainsPoint(tri.Vertex1) ||
+                    !boundingBox.ContainsPoint(tri.Vertex2) ||
+                    !boundingBox.ContainsPoint(tri.Vertex3))
+                {
+                    throw new ArgumentOutOfRangeException(nameof(geometry), "A triangle vertex is outside the bounding box");
+                }
+            }
 
             // create a modifiable clone of the geometry list, since Node will clear the list
             var geometryClone = new List<Triangle>(geometry);
@@ -518,8 +540,8 @@ namespace Engine3D.Raytrace
                         Assert.IsTrue(intersection.rayFrac >= 0.0, "Ray fraction is negative");
 
                         // If intersection is outside of this node's bounding box
-                        // then there may be a closer intersection in this or another node.
-                        //if (node.boundingBox.ContainsPoint(intersection.pos))
+                        // then there may be a closer intersection in another node.
+                        if (node.boundingBox.ContainsPoint(intersection.pos))
                         {
                             closestIntersection = intersection;
                         }
