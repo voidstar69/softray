@@ -1,8 +1,10 @@
 ﻿using System;
+using Engine3D;
 using Engine3D.Raytrace;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Assert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
 using Scene = Engine3D.Scene;
+using Triangle = Engine3D.Raytrace.Triangle;
 using Vector = Engine3D.Vector;
 
 namespace Engine3D_Tests.Raytrace
@@ -15,11 +17,24 @@ namespace Engine3D_Tests.Raytrace
         [TestMethod]
         public void DynamicVsStaticShadowMethods()
         {
-            IRayIntersectable geometry = new Sphere(Vector.Zero, 0.5);
+            const int numRays = 100000;
+            const int numTriangles = 100;
+
+            var geometry = new GeometryCollection();
+            for (var i = 0; i < numTriangles; i++)
+            {
+                geometry.Add(new Triangle(
+                    MakeRandomVector(-1, 1, -1, 1, -1, 1),
+                    MakeRandomVector(-1, 1, -1, 1, -1, 1),
+                    MakeRandomVector(-1, 1, -1, 1, -1, 1),
+                    Color.Cyan.ToARGB()));
+            }
+
+            //IRayIntersectable geometry = new Sphere(Vector.Zero, 0.5);
             var scene = new Scene();
             const byte resolution = 10;
             string instanceKey = null;
-            const int randomSeed = 12345;
+            const int randomSeed = 12345678;
 
             var context = new RenderContext(new Random(randomSeed));
             var dynamicShadowMethod = new ShadowMethod(geometry, scene, false, resolution, instanceKey, context);
@@ -27,7 +42,6 @@ namespace Engine3D_Tests.Raytrace
             context = new RenderContext(new Random(randomSeed));
             var staticShadowMethod = new ShadowMethod(geometry, scene, true, resolution, instanceKey, context);
 
-            const int numRays = 1000000;
             var numRaysHit = 0;
 
             for (var i = 0; i < numRays; i++)
