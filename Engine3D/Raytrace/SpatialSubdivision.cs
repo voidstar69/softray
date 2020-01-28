@@ -7,7 +7,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
-using System.Linq;
 
 namespace Engine3D.Raytrace
 {
@@ -298,7 +297,7 @@ namespace Engine3D.Raytrace
                     !boundingBox.ContainsPoint(tri.Vertex2) ||
                     !boundingBox.ContainsPoint(tri.Vertex3))
                 {
-                    throw new ArgumentOutOfRangeException(nameof(geometry), "A triangle vertex is outside the bounding box");
+                    throw new ArgumentOutOfRangeException("geometry", "A triangle vertex is outside the bounding box");
                 }
             }
 
