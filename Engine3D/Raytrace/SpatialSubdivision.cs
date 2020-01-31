@@ -285,6 +285,9 @@ namespace Engine3D.Raytrace
             Contract.Requires(maxTreeDepth > 0);
             Contract.Requires(maxGeometryPerNode > 0);
 
+            if (geometry == null)
+                throw new ArgumentNullException("geometry");
+
             // TODO: hacky, and not multi-thread safe. Instead pass stats from root node back to this class.
             Node.totalTreeDepth = 0;
             Node.totalNodes = 0;
@@ -540,7 +543,7 @@ namespace Engine3D.Raytrace
 
                         // If intersection is outside of this node's bounding box
                         // then there may be a closer intersection in another node.
-                        if (node.boundingBox.ContainsPoint(intersection.pos))
+                        if (node.boundingBox.ContainsPoint(intersection.pos)) // TODO: this check might not be needed
                         {
                             closestIntersection = intersection;
                         }
