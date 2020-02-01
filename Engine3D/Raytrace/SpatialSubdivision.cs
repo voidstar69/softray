@@ -543,7 +543,7 @@ namespace Engine3D.Raytrace
 
                         // If intersection is outside of this node's bounding box
                         // then there may be a closer intersection in another node.
-                        //if (node.boundingBox.ContainsPoint(intersection.pos)) // TODO: this check might not be needed
+                        if (node.boundingBox.ContainsPoint(intersection.pos))
                         {
                             closestIntersection = intersection;
                         }
