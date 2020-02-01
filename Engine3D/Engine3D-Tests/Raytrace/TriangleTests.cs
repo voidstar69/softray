@@ -362,7 +362,7 @@ namespace Engine3D_Tests
 #else
             // my laptop in High Performance mode
             const double minMillionTriVoxelPerSec = 17.0;
-            const double maxMillionTriVoxelPerSec = 22.1;
+            const double maxMillionTriVoxelPerSec = 26.0;
 #endif
 
             const int numTriangles = 1000;

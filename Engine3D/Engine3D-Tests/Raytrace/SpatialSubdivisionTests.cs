@@ -1,4 +1,6 @@
-﻿using System;
+﻿#define APPVEYOR_PERFORMANCE_MARGINS
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -148,16 +150,17 @@ namespace Engine3D_Tests
         public void RayIntersectTreePerformance()
         {
 #if DEBUG
+            // my laptop in High Performance mode
             const double minMillionRaysPerSec = 7.0;
             const double maxMillionRaysPerSec = 8.0;
-#else
+#elif APPVEYOR_PERFORMANCE_MARGINS
             // AppVeyor build server
-            const double minMillionRaysPerSec = 25.5;
+            const double minMillionRaysPerSec = 22.0;
             const double maxMillionRaysPerSec = 31.0;
-
-            // my laptop on Power Saver mode
-//            const double minMillionRaysPerSec = 6.7;
-//            const double maxMillionRaysPerSec = 8.3;
+#else
+            // my laptop in High Performance mode
+            const double minMillionRaysPerSec = 12.0;
+            const double maxMillionRaysPerSec = 16.0;
 #endif
 
             const int numTriangles = 1000;
