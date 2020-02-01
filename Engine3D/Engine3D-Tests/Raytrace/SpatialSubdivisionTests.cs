@@ -1,4 +1,6 @@
-﻿using System;
+﻿#define APPVEYOR_PERFORMANCE_MARGINS
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -65,9 +67,9 @@ namespace Engine3D_Tests
             var tree = new SpatialSubdivision(triangles, boundingBox, maxTreeDepth, maxGeometryPerNode);
             Assert.IsNotNull(tree);
             Assert.AreEqual(4, tree.TreeDepth);
-            Assert.AreEqual(11, tree.NumNodes);
-            Assert.AreEqual(6, tree.NumLeafNodes);
-            Assert.AreEqual(5, tree.NumInternalNodes);
+            Assert.AreEqual(9, tree.NumNodes);
+            Assert.AreEqual(5, tree.NumLeafNodes);
+            Assert.AreEqual(4, tree.NumInternalNodes);
         }
 
         [TestMethod]
@@ -80,10 +82,10 @@ namespace Engine3D_Tests
             var boundingBox = GetBoundingBoxOfRandomTriangles();
             var tree = new SpatialSubdivision(triangles, boundingBox, maxTreeDepth, maxGeometryPerNode);
             Assert.IsNotNull(tree);
-            Assert.AreEqual(3, tree.TreeDepth);
-            Assert.AreEqual(5, tree.NumNodes);
-            Assert.AreEqual(3, tree.NumLeafNodes);
-            Assert.AreEqual(2, tree.NumInternalNodes);
+            Assert.AreEqual(2, tree.TreeDepth);
+            Assert.AreEqual(3, tree.NumNodes);
+            Assert.AreEqual(2, tree.NumLeafNodes);
+            Assert.AreEqual(1, tree.NumInternalNodes);
         }
 
         [TestMethod]
@@ -97,9 +99,9 @@ namespace Engine3D_Tests
             var tree = new SpatialSubdivision(triangles, boundingBox, maxTreeDepth, maxGeometryPerNode);
             Assert.IsNotNull(tree);
             Assert.AreEqual(3, tree.TreeDepth);
-            Assert.AreEqual(7, tree.NumNodes);
-            Assert.AreEqual(4, tree.NumLeafNodes);
-            Assert.AreEqual(3, tree.NumInternalNodes);
+            Assert.AreEqual(5, tree.NumNodes);
+            Assert.AreEqual(3, tree.NumLeafNodes);
+            Assert.AreEqual(2, tree.NumInternalNodes);
         }
 
         [TestMethod]
@@ -112,10 +114,10 @@ namespace Engine3D_Tests
             var boundingBox = GetBoundingBoxOfRandomTriangles();
             var tree = new SpatialSubdivision(triangles, boundingBox, maxTreeDepth, maxGeometryPerNode);
             Assert.IsNotNull(tree);
-            Assert.AreEqual(3, tree.TreeDepth);
-            Assert.AreEqual(5, tree.NumNodes);
-            Assert.AreEqual(3, tree.NumLeafNodes);
-            Assert.AreEqual(2, tree.NumInternalNodes);
+            Assert.AreEqual(2, tree.TreeDepth);
+            Assert.AreEqual(3, tree.NumNodes);
+            Assert.AreEqual(2, tree.NumLeafNodes);
+            Assert.AreEqual(1, tree.NumInternalNodes);
         }
 
         [TestMethod]
@@ -129,9 +131,9 @@ namespace Engine3D_Tests
             var tree = new SpatialSubdivision(triangles, boundingBox, maxTreeDepth, maxGeometryPerNode);
             Assert.IsNotNull(tree);
             Assert.AreEqual(10, tree.TreeDepth);
-            Assert.AreEqual(915, tree.NumNodes);
-            Assert.AreEqual(458, tree.NumLeafNodes);
-            Assert.AreEqual(457, tree.NumInternalNodes);
+            Assert.AreEqual(885, tree.NumNodes);
+            Assert.AreEqual(443, tree.NumLeafNodes);
+            Assert.AreEqual(442, tree.NumInternalNodes);
         }
 
         private ICollection<Triangle> BuildRandomTree(int numTriangles, int maxTreeDepth, int maxGeometryPerNode, int randomSeed, out SpatialSubdivision tree)
@@ -148,25 +150,26 @@ namespace Engine3D_Tests
         public void RayIntersectTreePerformance()
         {
 #if DEBUG
+            // my laptop in High Performance mode
             const double minMillionRaysPerSec = 7.0;
             const double maxMillionRaysPerSec = 8.0;
-#else
+#elif APPVEYOR_PERFORMANCE_MARGINS
             // AppVeyor build server
-            const double minMillionRaysPerSec = 25.5;
+            const double minMillionRaysPerSec = 22.0;
             const double maxMillionRaysPerSec = 31.0;
-
-            // my laptop on Power Saver mode
-//            const double minMillionRaysPerSec = 6.7;
-//            const double maxMillionRaysPerSec = 8.3;
+#else
+            // my laptop in High Performance mode
+            const double minMillionRaysPerSec = 12.0;
+            const double maxMillionRaysPerSec = 16.0;
 #endif
 
             const int numTriangles = 1000;
             SpatialSubdivision tree;
             BuildRandomTree(numTriangles, maxTreeDepth: 10, maxGeometryPerNode: 5, randomSeed: 12345, tree: out tree);
             Assert.AreEqual(10, tree.TreeDepth);
-            Assert.AreEqual(915, tree.NumNodes);
-            Assert.AreEqual(458, tree.NumLeafNodes);
-            Assert.AreEqual(457, tree.NumInternalNodes);
+            Assert.AreEqual(885, tree.NumNodes);
+            Assert.AreEqual(443, tree.NumLeafNodes);
+            Assert.AreEqual(442, tree.NumInternalNodes);
 
             const int numRays = 10000;
             var numRaysHit = 0;

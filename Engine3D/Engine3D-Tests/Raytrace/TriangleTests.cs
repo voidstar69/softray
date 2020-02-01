@@ -354,15 +354,15 @@ namespace Engine3D_Tests
 #if DEBUG
             // my laptop in High Performance mode
             const double minMillionTriVoxelPerSec = 2.8;
-            const double maxMillionTriVoxelPerSec = 3.2;
+            const double maxMillionTriVoxelPerSec = 4.0;
 #elif APPVEYOR_PERFORMANCE_MARGINS
             // AppVeyor build server
             const double minMillionTriVoxelPerSec = 31.0;
-            const double maxMillionTriVoxelPerSec = 42.0;
+            const double maxMillionTriVoxelPerSec = 43.5;
 #else
             // my laptop in High Performance mode
             const double minMillionTriVoxelPerSec = 17.0;
-            const double maxMillionTriVoxelPerSec = 22.1;
+            const double maxMillionTriVoxelPerSec = 26.0;
 #endif
 
             const int numTriangles = 1000;
