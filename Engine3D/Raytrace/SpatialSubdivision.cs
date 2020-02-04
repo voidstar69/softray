@@ -543,6 +543,8 @@ namespace Engine3D.Raytrace
 
                         // If intersection is outside of this node's bounding box
                         // then there may be a closer intersection in another node.
+                        // TODO: this causes a bug when rendering the far side of the couch model using LightFields.
+                        // This is due to LightFieldTriMethod, not this code.
                         if (node.boundingBox.ContainsPoint(intersection.pos))
                         {
                             closestIntersection = intersection;

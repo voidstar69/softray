@@ -191,54 +191,55 @@ namespace Engine3D_Tests
         }
 
         [TestMethod]
-        public void RayIntersectTreeCorrectness()
+        public void TreeCorrectness1()
         {
-            const int numTriangles = 100;
             SpatialSubdivision tree;
-            var triList = BuildRandomTree(numTriangles, maxTreeDepth: 10, maxGeometryPerNode: 5, randomSeed: 12345, tree: out tree);
-            Assert.AreEqual(8, tree.TreeDepth);
-            Assert.AreEqual(93, tree.NumNodes);
-            Assert.AreEqual(47, tree.NumLeafNodes);
-            Assert.AreEqual(46, tree.NumInternalNodes);
-
-            var triSet = new GeometryCollection();
-            foreach(var tri in triList)
-            {
-                triSet.Add(tri);
-            }
-
-            const int numRays = 100000;
-            var numRaysHit = 0;
-            for (var i = 0; i < numRays; i++)
-            {
-                var start = MakeRandomVector(triangleSpaceSize);
-                var dir = MakeRandomVector(-1, 1, -1, 1, -1, 1);
-                var infoBase = triSet.IntersectRay(start, dir, context);
-                var info = tree.IntersectRay(start, dir, context);
-                Assert.AreEqual(infoBase == null, info == null, "Ray " + i + ": SpatialSubdivision and GeometryCollection differ in intersection status");
-                if (info != null)
-                {
-                    numRaysHit++;
-                    Assert.AreEqual(infoBase.triIndex, info.triIndex, "triIndex diff on ray " + i);
-                    Assert.AreEqual(infoBase.rayFrac, info.rayFrac, "rayFrac diff on ray " + i);
-                    Assert.AreEqual(infoBase.pos, info.pos, "pos diff on ray " + i);
-                    Assert.AreEqual(infoBase.normal, info.normal, "normal diff on ray " + i);
-                    Assert.AreEqual(infoBase.color, info.color, "color diff on ray " + i);
-                }
-            }
+            var triList = BuildRandomTree(100, maxTreeDepth: 10, maxGeometryPerNode: 5, randomSeed: 12345, tree: out tree);
+            TestTree(tree, triList);
         }
 
-[TestMethod]
-public void TreeCorrectness1()
-{
- const int numTris = 20;
- SpatialSubdivision tree;
- var triList = BuildRandomTree(numTris, maxTreeDepth: 10, maxGeometryPerNode: 1, randomSeed: 123456, tree: out tree);
+        [TestMethod]
+        public void TreeCorrectness2()
+        {
+            SpatialSubdivision tree;
+            var triList = BuildRandomTree(20, maxTreeDepth: 10, maxGeometryPerNode: 1, randomSeed: 123456, tree: out tree);
+            TestTree(tree, triList);
+        }
 
- TestTree(tree, triList);
-}
+        [TestMethod]
+        public void TreeCorrectness_RandomInput()
+        {
+            random = new Random();
+            var numTriangles = random.Next(10000);
+            var maxTreeDepth = random.Next(50) + 10;
+            var maxGeometryPerNode = random.Next(10) + 5;
+            var randomSeed = random.Next();
 
-        private void TestTree(SpatialSubdivision tree, ICollection<Triangle> triList)
+            Console.WriteLine("Setup: {0} triangles, {1} tree depth, {2} max geometry, {3} random seed",
+                numTriangles, maxTreeDepth, maxGeometryPerNode, randomSeed);
+
+            SpatialSubdivision tree;
+            var triList = BuildRandomTree(numTriangles, maxTreeDepth, maxGeometryPerNode, randomSeed, out tree);
+            TestTree(tree, triList, 10000);
+        }
+
+        [TestMethod]
+        public void TreeCorrectness_EnsureIntersectionCheckedAgainstTreeNodeBoundingBox()
+        {
+            SpatialSubdivision tree;
+            var triList = BuildRandomTree(100, maxTreeDepth: 10, maxGeometryPerNode: 5, randomSeed: 1234567, tree: out tree);
+            TestTree(tree, triList, 265896);
+        }
+
+        [TestMethod]
+        public void TreeCorrectness_EnsureIntersectionCheckedAgainstTreeNodeBoundingBox2()
+        {
+            SpatialSubdivision tree;
+            var triList = BuildRandomTree(10000, maxTreeDepth: 10, maxGeometryPerNode: 5, randomSeed: 1234567, tree: out tree);
+            TestTree(tree, triList, 34);
+        }
+
+        private void TestTree(SpatialSubdivision tree, ICollection<Triangle> triList, int numRays = 100000)
         {
             var triSet = new GeometryCollection();
             foreach(var tri in triList)
@@ -246,9 +247,7 @@ public void TreeCorrectness1()
                 triSet.Add(tri);
             }
 
-            const int numRays = 100000;
-            var numRaysHit = 0;
-            for (var i = 0; i < numRays; i++)
+            for (var i = 1; i <= numRays; i++)
             {
                 var start = MakeRandomVector(triangleSpaceSize);
                 var dir = MakeRandomVector(-1, 1, -1, 1, -1, 1);
@@ -257,7 +256,6 @@ public void TreeCorrectness1()
                 Assert.AreEqual(infoBase == null, info == null, "Ray " + i + ": SpatialSubdivision and GeometryCollection differ in intersection status");
                 if (info != null)
                 {
-                    numRaysHit++;
                     Assert.AreEqual(infoBase.triIndex, info.triIndex, "triIndex diff on ray " + i);
                     Assert.AreEqual(infoBase.rayFrac, info.rayFrac, "rayFrac diff on ray " + i);
                     Assert.AreEqual(infoBase.pos, info.pos, "pos diff on ray " + i);
