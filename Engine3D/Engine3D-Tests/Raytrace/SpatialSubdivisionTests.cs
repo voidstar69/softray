@@ -151,16 +151,16 @@ namespace Engine3D_Tests
         {
 #if DEBUG
             // my laptop in High Performance mode
-            const double minMillionRaysPerSec = 4.0;
-            const double maxMillionRaysPerSec = 6.0;
+            const double minMillionRaysPerSec = 10.0;
+            const double maxMillionRaysPerSec = 13.0;
 #elif APPVEYOR_PERFORMANCE_MARGINS
             // AppVeyor build server
-            const double minMillionRaysPerSec = 22.0;
-            const double maxMillionRaysPerSec = 31.0;
+            const double minMillionRaysPerSec = 57.0;
+            const double maxMillionRaysPerSec = 59.0;
 #else
             // my laptop in High Performance mode
-            const double minMillionRaysPerSec = 10.5;
-            const double maxMillionRaysPerSec = 17.0;
+            const double minMillionRaysPerSec = 26.0;
+            const double maxMillionRaysPerSec = 37.0;
 #endif
 
             const int numTriangles = 1000;
@@ -195,16 +195,16 @@ namespace Engine3D_Tests
         {
 #if DEBUG
             // my laptop in High Performance mode
-            const double minMillionRaysPerSec = 0.8;
-            const double maxMillionRaysPerSec = 1.1;
+            const double minMillionRaysPerSec = 2;
+            const double maxMillionRaysPerSec = 3;
 #elif APPVEYOR_PERFORMANCE_MARGINS
             // AppVeyor build server
-            const double minMillionRaysPerSec = 5.0;
-            const double maxMillionRaysPerSec = 6.0;
+            const double minMillionRaysPerSec = 23.0;
+            const double maxMillionRaysPerSec = 26.0;
 #else
             // my laptop in High Performance mode
-            const double minMillionRaysPerSec = 2.5;
-            const double maxMillionRaysPerSec = 3.5;
+            const double minMillionRaysPerSec = 10.0;
+            const double maxMillionRaysPerSec = 12.0;
 #endif
 
             const int numTriangles = 1000;
