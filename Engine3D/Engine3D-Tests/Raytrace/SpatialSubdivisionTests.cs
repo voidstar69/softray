@@ -337,7 +337,7 @@ namespace Engine3D_Tests
                 if (info != null)
                 {
                     Assert.AreEqual(infoBase.triIndex, info.triIndex, "triIndex diff on ray " + i);
-                    Assert.AreEqual(infoBase.rayFrac, info.rayFrac, "rayFrac diff on ray " + i);
+                    Assert.AreEqual(infoBase.rayFrac, info.rayFrac, 1e-10, "rayFrac diff on ray " + i);
                     Assert.AreEqual(infoBase.pos, info.pos, "pos diff on ray " + i);
                     Assert.AreEqual(infoBase.normal, info.normal, "normal diff on ray " + i);
                     Assert.AreEqual(infoBase.color, info.color, "color diff on ray " + i);

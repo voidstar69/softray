@@ -400,14 +400,16 @@ namespace Engine3D.Raytrace
             //Assert.IsTrue(false, "{0} {1}", start, end);
             // TODO: profiler says this (ClipLineSegment) uses 17% of overall time
             // Without this the Solid Octree mode causes the splitting planes to fill the screen!
-            if (!root.boundingBox.OverlapsLineSegment(start, end))
-            // TODO: clipping line segment breaks IntersectionInfo.rayFrac, because ray is truncated!
-//            if (!root.boundingBox.ClipLineSegment(ref start, ref end))
+            var originalStart = start;
+            if (!root.boundingBox.ClipLineSegment(ref start, ref end))
             {
-                //Assert.Fail("foo");
                 ClippedRayCount++;
                 return null;
             }
+
+            // determine how to translate ray frac of clipped line into ray frac of original line
+            double rayFracOffset = originalStart.Distance(start) / dir.Length;
+
             //Assert.IsTrue(false, "{0} {1}", start, end);
 
             //dir.Normalise();
@@ -417,7 +419,13 @@ namespace Engine3D.Raytrace
             // TODO: this optimisation may actually slow down the code! On the Couch model, in 10x res, it is definitely slower!
             //var testedTriangles = new HashSet<Triangle>();
             ISet<Triangle> testedTriangles = null;
-            return RecursiveRayTrace(root, start, end, dir, testedTriangles, context);
+            var intersection = RecursiveRayTrace(root, start, end, dir, testedTriangles, context);
+            if (intersection != null)
+            {
+                // translate ray frac of clipped line into ray frac of original line
+                intersection.rayFrac += rayFracOffset;
+            }
+            return intersection;
         }
 
         /// <summary>
