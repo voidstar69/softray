@@ -83,19 +83,22 @@ namespace Engine3D.Raytrace
         public IntersectionInfo IntersectRay(Vector start, Vector dir, RenderContext context)
         {
             IntersectionInfo info = plane.IntersectRay(start, dir, context);
-            if (info != null)
+            if (info == null)
+                return null;
+
+            Assert.IsTrue(info.rayFrac >= 0.0, "Ray fraction is negative");
+            Vector v1ToIntersection = info.pos - vertex1.Position;
+            double s = v1ToIntersection.DotProduct(edge2Perp) / edge1.DotProduct(edge2Perp);
+
+            if (s < 0.0 || s > 1.0)
+                return null;
+
+            double t = v1ToIntersection.DotProduct(edge1Perp) / edge2.DotProduct(edge1Perp);
+            if (s >= 0.0 && t >= 0.0 && s + t <= 1.0)
             {
-                Assert.IsTrue(info.rayFrac >= 0.0, "Ray fraction is negative");
-                Vector v1ToIntersection = info.pos - vertex1.Position;
-                double s = v1ToIntersection.DotProduct(edge2Perp) / edge1.DotProduct(edge2Perp);
-                // TODO: bail out early if s < 0 or s > 1? Speeds up this code.
-                double t = v1ToIntersection.DotProduct(edge1Perp) / edge2.DotProduct(edge1Perp);
-                if (s >= 0.0 && t >= 0.0 && s + t <= 1.0)
-                {
-                    info.color = color;
-                    info.triIndex = TriangleIndex;
-                    return info;
-                }
+                info.color = color;
+                info.triIndex = TriangleIndex;
+                return info;
             }
             return null;
         }

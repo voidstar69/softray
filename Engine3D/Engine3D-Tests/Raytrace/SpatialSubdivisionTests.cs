@@ -1,4 +1,4 @@
-﻿//#define APPVEYOR_PERFORMANCE_MARGINS
+﻿#define APPVEYOR_PERFORMANCE_MARGINS
 
 using System;
 using System.Collections.Generic;
@@ -147,16 +147,62 @@ namespace Engine3D_Tests
         }
 
         [TestMethod]
+        public void RayIntersectTriangleCollectionFromInside_Performance()
+        {
+#if DEBUG
+            // my laptop in High Performance mode
+            const double minMillionRaysPerSec = 4.5;
+            const double maxMillionRaysPerSec = 5.0;
+#elif APPVEYOR_PERFORMANCE_MARGINS
+            // AppVeyor build server
+            const double minMillionRaysPerSec = 25.0;
+            const double maxMillionRaysPerSec = 29.0;
+#else
+            // my laptop in High Performance mode
+            const double minMillionRaysPerSec = 15.5;
+            const double maxMillionRaysPerSec = 16.5;
+#endif
+
+            const int numTriangles = 1000;
+            const int randomSeed = 12345;
+            random = new Random(randomSeed);
+
+            var triSet = new GeometryCollection();
+            foreach(var tri in MakeRandomTriangles(numTriangles))
+            {
+                triSet.Add(tri);
+            }
+
+            const int numRays = 10000;
+            var numRaysHit = 0;
+            DateTime startTime = DateTime.Now;
+            for (var i = 0; i < numRays; i++)
+            {
+                var start = MakeRandomVector(triangleSpaceSize);
+                var dir = MakeRandomVector(-1, 1, -1, 1, -1, 1);
+                var info = triSet.IntersectRay(start, dir, context);
+                if (info != null)
+                    numRaysHit++;
+            }
+            var elapsedTime = DateTime.Now - startTime;
+            Assert.IsTrue(numRays * 0.2 < numRaysHit && numRaysHit < numRays * 0.3, "Num rays hit {0} should be 20-30% of total rays {1}", numRaysHit, numRays);
+            var millionRayTriPerSec = numRays / 1000000.0 / elapsedTime.TotalSeconds * numTriangles;
+            Assert.IsTrue(minMillionRaysPerSec < millionRayTriPerSec && millionRayTriPerSec < maxMillionRaysPerSec,
+                "Rays per second {0:f2} not between {1} and {2} (millions)", millionRayTriPerSec, minMillionRaysPerSec, maxMillionRaysPerSec);
+            Console.WriteLine("Performance: {0} million ray/tri per second", millionRayTriPerSec);
+        }
+
+        [TestMethod]
         public void RayIntersectTreeFromInside_Performance()
         {
 #if DEBUG
             // my laptop in High Performance mode
-            const double minMillionRaysPerSec = 10.0;
-            const double maxMillionRaysPerSec = 13.0;
+            const double minMillionRaysPerSec = 11.0;
+            const double maxMillionRaysPerSec = 14.0;
 #elif APPVEYOR_PERFORMANCE_MARGINS
             // AppVeyor build server
-            const double minMillionRaysPerSec = 52.0;
-            const double maxMillionRaysPerSec = 59.0;
+            const double minMillionRaysPerSec = 57.0;
+            const double maxMillionRaysPerSec = 65.0;
 #else
             // my laptop in High Performance mode
             const double minMillionRaysPerSec = 35.0;
@@ -167,9 +213,9 @@ namespace Engine3D_Tests
             SpatialSubdivision tree;
             BuildRandomTree(numTriangles, maxTreeDepth: 10, maxGeometryPerNode: 5, randomSeed: 12345, tree: out tree);
             Assert.AreEqual(10, tree.TreeDepth);
-            //Assert.AreEqual(885, tree.NumNodes);
-            //Assert.AreEqual(443, tree.NumLeafNodes);
-            //Assert.AreEqual(442, tree.NumInternalNodes);
+            Assert.AreEqual(885, tree.NumNodes);
+            Assert.AreEqual(443, tree.NumLeafNodes);
+            Assert.AreEqual(442, tree.NumInternalNodes);
 
             const int numRays = 10000;
             var numRaysHit = 0;
@@ -195,12 +241,12 @@ namespace Engine3D_Tests
         {
 #if DEBUG
             // my laptop in High Performance mode
-            const double minMillionRaysPerSec = 2;
-            const double maxMillionRaysPerSec = 3;
+            const double minMillionRaysPerSec = 4.5;
+            const double maxMillionRaysPerSec = 5.5;
 #elif APPVEYOR_PERFORMANCE_MARGINS
             // AppVeyor build server
-            const double minMillionRaysPerSec = 23.0;
-            const double maxMillionRaysPerSec = 26.0;
+            const double minMillionRaysPerSec = 25.0;
+            const double maxMillionRaysPerSec = 29.0;
 #else
             // my laptop in High Performance mode
             const double minMillionRaysPerSec = 12.0;
@@ -211,9 +257,9 @@ namespace Engine3D_Tests
             SpatialSubdivision tree;
             BuildRandomTree(numTriangles, maxTreeDepth: 10, maxGeometryPerNode: 5, randomSeed: 12345, tree: out tree);
             Assert.AreEqual(10, tree.TreeDepth);
-            //Assert.AreEqual(885, tree.NumNodes);
-            //Assert.AreEqual(443, tree.NumLeafNodes);
-            //Assert.AreEqual(442, tree.NumInternalNodes);
+            Assert.AreEqual(885, tree.NumNodes);
+            Assert.AreEqual(443, tree.NumLeafNodes);
+            Assert.AreEqual(442, tree.NumInternalNodes);
 
             const int numRays = 10000;
             var numRaysHit = 0;
