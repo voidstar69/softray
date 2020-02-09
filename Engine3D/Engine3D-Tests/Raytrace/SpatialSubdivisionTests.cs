@@ -147,20 +147,66 @@ namespace Engine3D_Tests
         }
 
         [TestMethod]
-        public void RayIntersectTreePerformance()
+        public void RayIntersectTriangleCollectionFromInside_Performance()
         {
 #if DEBUG
             // my laptop in High Performance mode
-            const double minMillionRaysPerSec = 7.0;
-            const double maxMillionRaysPerSec = 8.0;
+            const double minMillionRaysPerSec = 4.5;
+            const double maxMillionRaysPerSec = 5.0;
 #elif APPVEYOR_PERFORMANCE_MARGINS
             // AppVeyor build server
-            const double minMillionRaysPerSec = 22.0;
-            const double maxMillionRaysPerSec = 31.0;
+            const double minMillionRaysPerSec = 21.0;
+            const double maxMillionRaysPerSec = 29.0;
 #else
             // my laptop in High Performance mode
-            const double minMillionRaysPerSec = 12.0;
-            const double maxMillionRaysPerSec = 16.0;
+            const double minMillionRaysPerSec = 15.5;
+            const double maxMillionRaysPerSec = 16.5;
+#endif
+
+            const int numTriangles = 1000;
+            const int randomSeed = 12345;
+            random = new Random(randomSeed);
+
+            var triSet = new GeometryCollection();
+            foreach(var tri in MakeRandomTriangles(numTriangles))
+            {
+                triSet.Add(tri);
+            }
+
+            const int numRays = 10000;
+            var numRaysHit = 0;
+            DateTime startTime = DateTime.Now;
+            for (var i = 0; i < numRays; i++)
+            {
+                var start = MakeRandomVector(triangleSpaceSize);
+                var dir = MakeRandomVector(-1, 1, -1, 1, -1, 1);
+                var info = triSet.IntersectRay(start, dir, context);
+                if (info != null)
+                    numRaysHit++;
+            }
+            var elapsedTime = DateTime.Now - startTime;
+            Assert.IsTrue(numRays * 0.2 < numRaysHit && numRaysHit < numRays * 0.3, "Num rays hit {0} should be 20-30% of total rays {1}", numRaysHit, numRays);
+            var millionRayTriPerSec = numRays / 1000000.0 / elapsedTime.TotalSeconds * numTriangles;
+            Assert.IsTrue(minMillionRaysPerSec < millionRayTriPerSec && millionRayTriPerSec < maxMillionRaysPerSec,
+                "Rays per second {0:f2} not between {1} and {2} (millions)", millionRayTriPerSec, minMillionRaysPerSec, maxMillionRaysPerSec);
+            Console.WriteLine("Performance: {0} million ray/tri per second", millionRayTriPerSec);
+        }
+
+        [TestMethod]
+        public void RayIntersectTreeFromInside_Performance()
+        {
+#if DEBUG
+            // my laptop in High Performance mode
+            const double minMillionRaysPerSec = 11.0;
+            const double maxMillionRaysPerSec = 14.0;
+#elif APPVEYOR_PERFORMANCE_MARGINS
+            // AppVeyor build server
+            const double minMillionRaysPerSec = 60.0;
+            const double maxMillionRaysPerSec = 82.0;
+#else
+            // my laptop in High Performance mode
+            const double minMillionRaysPerSec = 35.0;
+            const double maxMillionRaysPerSec = 49.0;
 #endif
 
             const int numTriangles = 1000;
@@ -191,34 +237,124 @@ namespace Engine3D_Tests
         }
 
         [TestMethod]
-        public void RayIntersectTreeCorrectness()
+        public void RayIntersectTreeMostlyFromOutside_Performance()
         {
-            const int numTriangles = 100;
-            SpatialSubdivision tree;
-            var triList = BuildRandomTree(numTriangles, maxTreeDepth: 10, maxGeometryPerNode: 5, randomSeed: 12345, tree: out tree);
-            Assert.AreEqual(8, tree.TreeDepth);
-            Assert.AreEqual(93, tree.NumNodes);
-            Assert.AreEqual(47, tree.NumLeafNodes);
-            Assert.AreEqual(46, tree.NumInternalNodes);
+#if DEBUG
+            // my laptop in High Performance mode
+            const double minMillionRaysPerSec = 4.5;
+            const double maxMillionRaysPerSec = 5.5;
+#elif APPVEYOR_PERFORMANCE_MARGINS
+            // AppVeyor build server
+            const double minMillionRaysPerSec = 25.0;
+            const double maxMillionRaysPerSec = 29.0;
+#else
+            // my laptop in High Performance mode
+            const double minMillionRaysPerSec = 12.0;
+            const double maxMillionRaysPerSec = 17.0;
+#endif
 
+            const int numTriangles = 1000;
+            SpatialSubdivision tree;
+            BuildRandomTree(numTriangles, maxTreeDepth: 10, maxGeometryPerNode: 5, randomSeed: 12345, tree: out tree);
+            Assert.AreEqual(10, tree.TreeDepth);
+            Assert.AreEqual(885, tree.NumNodes);
+            Assert.AreEqual(443, tree.NumLeafNodes);
+            Assert.AreEqual(442, tree.NumInternalNodes);
+
+            const int numRays = 10000;
+            var numRaysHit = 0;
+            DateTime startTime = DateTime.Now;
+            for (var i = 0; i < numRays; i++)
+            {
+                var start = MakeRandomVector(triangleSpaceSize * 10);
+                var end = MakeRandomVector(triangleSpaceSize);
+                var dir = end - start;
+                var info = tree.IntersectRay(start, dir, context);
+                if (info != null)
+                    numRaysHit++;
+            }
+            var elapsedTime = DateTime.Now - startTime;
+            //Assert.IsTrue(numRays * 0.2 < numRaysHit && numRaysHit < numRays * 0.3, "Num rays hit {0} should be 20-30% of total rays {1}", numRaysHit, numRays);
+            var millionRayTriPerSec = numRays / 1000000.0 / elapsedTime.TotalSeconds * numTriangles;
+            Assert.IsTrue(minMillionRaysPerSec < millionRayTriPerSec && millionRayTriPerSec < maxMillionRaysPerSec,
+                "Rays per second {0:f2} not between {1} and {2} (millions)", millionRayTriPerSec, minMillionRaysPerSec, maxMillionRaysPerSec);
+            Console.WriteLine("Performance: {0} million ray/tri per second", millionRayTriPerSec);
+        }
+
+        [TestMethod]
+        public void TreeCorrectness1()
+        {
+            SpatialSubdivision tree;
+            var triList = BuildRandomTree(100, maxTreeDepth: 10, maxGeometryPerNode: 5, randomSeed: 12345, tree: out tree);
+            TestTree_InsideOut(tree, triList);
+        }
+
+        [TestMethod]
+        public void TreeCorrectness2()
+        {
+            SpatialSubdivision tree;
+            var triList = BuildRandomTree(20, maxTreeDepth: 10, maxGeometryPerNode: 1, randomSeed: 123456, tree: out tree);
+            TestTree_InsideOut(tree, triList);
+        }
+
+        [TestMethod]
+        public void TreeCorrectness_OutsideIn()
+        {
+            SpatialSubdivision tree;
+            var triList = BuildRandomTree(20, maxTreeDepth: 10, maxGeometryPerNode: 1, randomSeed: 123456, tree: out tree);
+            TestTree_OutsideIn(tree, triList);
+        }
+
+        [TestMethod]
+        public void TreeCorrectness_RandomInput()
+        {
+            random = new Random();
+            var numTriangles = random.Next(10000);
+            var maxTreeDepth = random.Next(50) + 10;
+            var maxGeometryPerNode = random.Next(10) + 5;
+            var randomSeed = random.Next();
+
+            Console.WriteLine("Setup: {0} triangles, {1} tree depth, {2} max geometry, {3} random seed",
+                numTriangles, maxTreeDepth, maxGeometryPerNode, randomSeed);
+
+            SpatialSubdivision tree;
+            var triList = BuildRandomTree(numTriangles, maxTreeDepth, maxGeometryPerNode, randomSeed, out tree);
+            TestTree_InsideOut(tree, triList, 10000);
+        }
+
+        [TestMethod]
+        public void TreeCorrectness_EnsureIntersectionCheckedAgainstTreeNodeBoundingBox()
+        {
+            SpatialSubdivision tree;
+            var triList = BuildRandomTree(100, maxTreeDepth: 10, maxGeometryPerNode: 5, randomSeed: 1234567, tree: out tree);
+            TestTree_InsideOut(tree, triList, 265896);
+        }
+
+        [TestMethod]
+        public void TreeCorrectness_EnsureIntersectionCheckedAgainstTreeNodeBoundingBox2()
+        {
+            SpatialSubdivision tree;
+            var triList = BuildRandomTree(10000, maxTreeDepth: 10, maxGeometryPerNode: 5, randomSeed: 1234567, tree: out tree);
+            TestTree_InsideOut(tree, triList, 34);
+        }
+
+        private void TestTree_InsideOut(SpatialSubdivision tree, ICollection<Triangle> triList, int numRays = 100000)
+        {
             var triSet = new GeometryCollection();
             foreach(var tri in triList)
             {
                 triSet.Add(tri);
             }
 
-            const int numRays = 100000;
-            var numRaysHit = 0;
-            for (var i = 0; i < numRays; i++)
+            for (var i = 1; i <= numRays; i++)
             {
                 var start = MakeRandomVector(triangleSpaceSize);
                 var dir = MakeRandomVector(-1, 1, -1, 1, -1, 1);
-                var infoBase = triSet.IntersectRay(start, dir, context);
                 var info = tree.IntersectRay(start, dir, context);
+                var infoBase = triSet.IntersectRay(start, dir, context);
                 Assert.AreEqual(infoBase == null, info == null, "Ray " + i + ": SpatialSubdivision and GeometryCollection differ in intersection status");
                 if (info != null)
                 {
-                    numRaysHit++;
                     Assert.AreEqual(infoBase.triIndex, info.triIndex, "triIndex diff on ray " + i);
                     Assert.AreEqual(infoBase.rayFrac, info.rayFrac, "rayFrac diff on ray " + i);
                     Assert.AreEqual(infoBase.pos, info.pos, "pos diff on ray " + i);
@@ -228,17 +364,7 @@ namespace Engine3D_Tests
             }
         }
 
-[TestMethod]
-public void TreeCorrectness1()
-{
- const int numTris = 20;
- SpatialSubdivision tree;
- var triList = BuildRandomTree(numTris, maxTreeDepth: 10, maxGeometryPerNode: 1, randomSeed: 123456, tree: out tree);
-
- TestTree(tree, triList);
-}
-
-        private void TestTree(SpatialSubdivision tree, ICollection<Triangle> triList)
+        private void TestTree_OutsideIn(SpatialSubdivision tree, ICollection<Triangle> triList, int numRays = 100000)
         {
             var triSet = new GeometryCollection();
             foreach(var tri in triList)
@@ -246,20 +372,18 @@ public void TreeCorrectness1()
                 triSet.Add(tri);
             }
 
-            const int numRays = 100000;
-            var numRaysHit = 0;
-            for (var i = 0; i < numRays; i++)
+            for (var i = 1; i <= numRays; i++)
             {
-                var start = MakeRandomVector(triangleSpaceSize);
-                var dir = MakeRandomVector(-1, 1, -1, 1, -1, 1);
+                var start = MakeRandomVector(triangleSpaceSize * 10);
+                var end = MakeRandomVector(triangleSpaceSize);
+                var dir = end - start;
                 var info = tree.IntersectRay(start, dir, context);
                 var infoBase = triSet.IntersectRay(start, dir, context);
                 Assert.AreEqual(infoBase == null, info == null, "Ray " + i + ": SpatialSubdivision and GeometryCollection differ in intersection status");
                 if (info != null)
                 {
-                    numRaysHit++;
                     Assert.AreEqual(infoBase.triIndex, info.triIndex, "triIndex diff on ray " + i);
-                    Assert.AreEqual(infoBase.rayFrac, info.rayFrac, "rayFrac diff on ray " + i);
+                    Assert.AreEqual(infoBase.rayFrac, info.rayFrac, 1e-10, "rayFrac diff on ray " + i);
                     Assert.AreEqual(infoBase.pos, info.pos, "pos diff on ray " + i);
                     Assert.AreEqual(infoBase.normal, info.normal, "normal diff on ray " + i);
                     Assert.AreEqual(infoBase.color, info.color, "color diff on ray " + i);

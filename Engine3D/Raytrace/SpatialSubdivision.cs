@@ -20,7 +20,7 @@ namespace Engine3D.Raytrace
 
         private class Node
         {
-            public readonly ICollection<Triangle> geometry = new List<Triangle>();
+            public readonly List<Triangle> geometry;
             public readonly AxisAlignedBox boundingBox;
 
             public Plane splittingPlane;
@@ -35,8 +35,8 @@ namespace Engine3D.Raytrace
             public static int leafNodes;
 
             private static Random random = new Random();
-
-            public Node(ICollection<Triangle> geometry, AxisAlignedBox boundingBox)
+            
+            public Node(List<Triangle> geometry, AxisAlignedBox boundingBox)
             {
                 Assert.IsTrue(geometry != null, "Node geometry is null");
                 Assert.IsTrue(boundingBox != null, "Node bounding box is null");
@@ -144,8 +144,8 @@ namespace Engine3D.Raytrace
                 }
 
                 // Copy all geometry from current node to the appropriate child nodes.
-                ICollection<Triangle> normalSideGeom = new List<Triangle>();
-                ICollection<Triangle> backSideGeom = new List<Triangle>();
+                var normalSideGeom = new List<Triangle>();
+                var backSideGeom = new List<Triangle>();
                 foreach (Triangle geom in geometry)
                 {
                     PlaneHalfSpace planeHalfSpace = geom.IntersectPlane(splittingPlane);
@@ -228,16 +228,6 @@ namespace Engine3D.Raytrace
                     Contract.Assert(splittingPlane != null, "Internal node must have a splitting plane");
                 }
             }
-
-            //public bool RecursiveTriangleFind(int triIndex)
-            //{
-            //    if (geometry.Any(t => t.TriangleIndex == triIndex))
-            //        return true;
-
-            //    normalSide.RecursiveTriangleFind(triIndex);
-            //    backSide.RecursiveTriangleFind(triIndex);
-
-            //}
 
             /// <summary>
             /// Current node is a leaf node, so perform any processing required for leaf nodes.
@@ -400,14 +390,16 @@ namespace Engine3D.Raytrace
             //Assert.IsTrue(false, "{0} {1}", start, end);
             // TODO: profiler says this (ClipLineSegment) uses 17% of overall time
             // Without this the Solid Octree mode causes the splitting planes to fill the screen!
-            if (!root.boundingBox.OverlapsLineSegment(start, end))
-            // TODO: clipping line segment breaks IntersectionInfo.rayFrac, because ray is truncated!
-//            if (!root.boundingBox.ClipLineSegment(ref start, ref end))
+            var originalStart = start;
+            if (!root.boundingBox.ClipLineSegment(ref start, ref end))
             {
-                //Assert.Fail("foo");
                 ClippedRayCount++;
                 return null;
             }
+
+            // determine how to translate ray frac of clipped line into ray frac of original line
+            double rayFracOffset = originalStart.Distance(start) / dir.Length;
+
             //Assert.IsTrue(false, "{0} {1}", start, end);
 
             //dir.Normalise();
@@ -415,9 +407,15 @@ namespace Engine3D.Raytrace
 
             TracedRayCount++;
             // TODO: this optimisation may actually slow down the code! On the Couch model, in 10x res, it is definitely slower!
-            //var testedTriangles = new HashSet<Triangle>();
-            ISet<Triangle> testedTriangles = null;
-            return RecursiveRayTrace(root, start, end, dir, testedTriangles, context);
+            var testedTriangles = new HashSet<Triangle>();
+            //ISet<Triangle> testedTriangles = null;
+            var intersection = RecursiveRayTrace(root, start, end, dir, testedTriangles, context);
+            if (intersection != null)
+            {
+                // translate ray frac of clipped line into ray frac of original line
+                intersection.rayFrac += rayFracOffset;
+            }
+            return intersection;
         }
 
         /// <summary>
@@ -446,8 +444,8 @@ namespace Engine3D.Raytrace
             Contract.Assert(node != null);
 
             // TODO: this optimisation may actually slow down the code! On the Couch model, in 10x res, it is definitely slower!
-            //var testedTriangles = new HashSet<Triangle>();
-            ISet<Triangle> testedTriangles = null;
+            var testedTriangles = new HashSet<Triangle>();
+            //ISet<Triangle> testedTriangles = null;
 
             // TODO: avoid testing ray against given triangle? Triangle has likely already been tested.
             return RecursiveRayTrace(node, start, end, dir, testedTriangles, context);
@@ -493,12 +491,8 @@ namespace Engine3D.Raytrace
             if (node.normalSide == null && node.backSide == null)
             {
                 NumLeafNodesVisited++;
-            }
-
-            IntersectionInfo intersection;
 
 #if VISUALISE_TREE
-
             if (node.geometry.Count > 0)
             {
                 // Check that this is a leaf node.
@@ -517,63 +511,20 @@ namespace Engine3D.Raytrace
                 double rayFrac = start.Distance(originalStart);
 
                 dir.Normalise();
-                intersection = new IntersectionInfo { rayFrac = rayFrac, pos = start, normal = -dir, color = color };
-                return intersection;
+                return IntersectionInfo { rayFrac = rayFrac, pos = start, normal = -dir, color = color };
             }
-
 #else
-            // Trace ray against all geometry in this node.
-            IntersectionInfo closestIntersection = new IntersectionInfo();
-            closestIntersection.rayFrac = double.MaxValue;
-            foreach (Triangle tri in node.geometry)
-            {
-                // Has the ray already been tested against this triangle?
-                //if (!testedTriangles.Contains(tri))
-                // TODO: this optimisation is probably not multithread safe
-                //if (tri.LastRayId != currRayId)
+                // Trace ray against all geometry in this node.
+                IntersectionInfo closestIntersection = GetClosestIntersection(node, start, dir, testedTriangles, context);
+
+                // Did ray intersect any geometry?
+                if (closestIntersection.rayFrac < double.MaxValue)
                 {
-                    // No, so test the ray against this triangle.
-                    //testedTriangles.Add(tri);
-                    //bool triNoLongerNeeded = true;
-
-                    intersection = tri.IntersectRay(start, dir, context);
-                    if (intersection != null && intersection.rayFrac < closestIntersection.rayFrac)
-                    {
-                        Assert.IsTrue(intersection.rayFrac >= 0.0, "Ray fraction is negative");
-
-                        // If intersection is outside of this node's bounding box
-                        // then there may be a closer intersection in another node.
-                        //if (node.boundingBox.ContainsPoint(intersection.pos)) // TODO: this check might not be needed
-                        {
-                            closestIntersection = intersection;
-                        }
-                        //else
-                        //{
-                        //    triNoLongerNeeded = false;
-                        //}
-                    }
-                    numRayTests += tri.NumRayTests;
-                    RayGeometryTestCount++;
-
-//                    if (triNoLongerNeeded)
-                    {
-                        // Update ray id.
-                        // TODO: probably not multithread safe
-                        //tri.LastRayId = currRayId;
-                    }
+                    // Yes, so return information about the closest intersection.
+                    return closestIntersection;
                 }
-            }
-
-            // Did ray intersect any geometry?
-            if (closestIntersection.rayFrac < double.MaxValue)
-            {
-                //dir.Normalise();
-                //return new IntersectionInfo { color = 0x00ff0000, pos = start, normal = -dir };
-
-                // Yes, so return information about the closest intersection.
-                return closestIntersection;
-            }
 #endif
+            }
 
             // Is this node a leaf node?
             if (node.normalSide == null && node.backSide == null)
@@ -609,6 +560,7 @@ namespace Engine3D.Raytrace
             Assert.IsTrue(startHalfSpaces == PlaneHalfSpace.NormalSide || startHalfSpaces == PlaneHalfSpace.BackSide, "Start half space is invalid");
             PlaneHalfSpace endHalfSpaces = new Point(end).IntersectPlane(node.splittingPlane);
             Assert.IsTrue(endHalfSpaces == PlaneHalfSpace.NormalSide || endHalfSpaces == PlaneHalfSpace.BackSide, "End half space is invalid");
+            IntersectionInfo intersection;
             switch (startHalfSpaces)
             {
                 case PlaneHalfSpace.NormalSide:
@@ -672,6 +624,55 @@ namespace Engine3D.Raytrace
 
             // The ray did not intersect any geometry.
             return null;
+        }
+
+        private IntersectionInfo GetClosestIntersection(Node node, Vector start, Vector dir, ISet<Triangle> testedTriangles,
+            RenderContext context)
+        {
+            var closestIntersection = new IntersectionInfo {rayFrac = double.MaxValue};
+
+            foreach (Triangle tri in node.geometry)
+            {
+                // Has the ray already been tested against this triangle?
+                if (testedTriangles.Contains(tri))
+                    continue;
+
+                // No, so test the ray against this triangle.
+                //bool triNoLongerNeeded = true;
+
+                var intersection = tri.IntersectRay(start, dir, context);
+                if (intersection != null && intersection.rayFrac < closestIntersection.rayFrac)
+                {
+                    Assert.IsTrue(intersection.rayFrac >= 0.0, "Ray fraction is negative");
+
+                    // If intersection is outside of this node's bounding box
+                    // then there may be a closer intersection in another node.
+                    // TODO: this causes a bug when rendering the far side of the couch model using LightFields.
+                    // This is due to LightFieldTriMethod, not this code.
+                    if (node.boundingBox.ContainsPoint(intersection.pos))
+                    {
+                        closestIntersection = intersection;
+                        testedTriangles.Add(tri);
+                    }
+
+                    //else
+                    //{
+                    //    triNoLongerNeeded = false;
+                    //}
+                }
+
+                numRayTests += tri.NumRayTests;
+                RayGeometryTestCount++;
+
+//                    if (triNoLongerNeeded)
+                {
+                    // Update ray id.
+                    // TODO: probably not multithread safe
+                    //tri.LastRayId = currRayId;
+                }
+            }
+
+            return closestIntersection;
         }
 
         #endregion
