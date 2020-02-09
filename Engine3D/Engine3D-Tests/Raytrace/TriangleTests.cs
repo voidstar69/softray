@@ -278,7 +278,7 @@ namespace Engine3D_Tests
 #elif APPVEYOR_PERFORMANCE_MARGINS
             // AppVeyor build server
             const double minMillionRaysPerSec = 6.0;
-            const double maxMillionRaysPerSec = 8.5;
+            const double maxMillionRaysPerSec = 9.5;
 #else
             // my laptop in High Performance mode
             const double minMillionRaysPerSec = 4.4;
@@ -318,7 +318,7 @@ namespace Engine3D_Tests
 #elif APPVEYOR_PERFORMANCE_MARGINS
             // AppVeyor build server
             const double minMillionRaysPerSec = 2.9;
-            const double maxMillionRaysPerSec = 4.0;
+            const double maxMillionRaysPerSec = 4.1;
 #else
             // my laptop in High Performance mode
             const double minMillionRaysPerSec = 1.2;
@@ -401,8 +401,8 @@ namespace Engine3D_Tests
             const double maxMillionRaysPerSec = 0.30;
 #elif APPVEYOR_PERFORMANCE_MARGINS
             // AppVeyor build server
-            const double minMillionRaysPerSec = 0.2;
-            const double maxMillionRaysPerSec = 0.3;
+            const double minMillionRaysPerSec = 0.20;
+            const double maxMillionRaysPerSec = 0.31;
 #else
             // my laptop in High Performance mode
             const double minMillionRaysPerSec = 0.14;
