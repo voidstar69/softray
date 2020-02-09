@@ -358,7 +358,7 @@ namespace Engine3D_Tests
 #elif APPVEYOR_PERFORMANCE_MARGINS
             // AppVeyor build server
             const double minMillionTriVoxelPerSec = 31.0;
-            const double maxMillionTriVoxelPerSec = 43.5;
+            const double maxMillionTriVoxelPerSec = 46.0;
 #else
             // my laptop in High Performance mode
             const double minMillionTriVoxelPerSec = 17.0;
