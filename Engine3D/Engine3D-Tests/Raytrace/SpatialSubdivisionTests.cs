@@ -12,6 +12,7 @@ using Triangle = Engine3D.Raytrace.Triangle;
 using Vector = Engine3D.Vector;
 
 // TODO: Use Benchmark.net to micro-benchmark some raytracing and make performance measurements more accurate
+// TODO: Make a test that passes random parameters to tree building (tree depth vs max tris per node) for large model, to find optimal parameters for given model
 
 namespace Engine3D_Tests
 {
@@ -298,8 +299,8 @@ namespace Engine3D_Tests
             const double maxMillionRaysPerSec = 45.0;
 #elif APPVEYOR_PERFORMANCE_MARGINS
             // AppVeyor build server
-            const double minMillionRaysPerSec = 130.0;
-            const double maxMillionRaysPerSec = 145.0;
+            const double minMillionRaysPerSec = 210.0;
+            const double maxMillionRaysPerSec = 240.0;
 #else
             // my laptop in High Performance mode
             const double minMillionRaysPerSec = 73.0;
@@ -335,7 +336,7 @@ namespace Engine3D_Tests
                     numRaysHit++;
             }
             var elapsedTime = DateTime.Now - startTime;
-            //Assert.IsTrue(numRays * 0.2 < numRaysHit && numRaysHit < numRays * 0.3, "Num rays hit {0} should be 20-30% of total rays {1}", numRaysHit, numRays);
+            Assert.IsTrue(numRays * 0.4 < numRaysHit && numRaysHit < numRays * 0.5, "Num rays hit {0} should be 40-50% of total rays {1}", numRaysHit, numRays);
             var millionRayTriPerSec = numRays / 1000000.0 / elapsedTime.TotalSeconds * numTriangles;
             Assert.IsTrue(minMillionRaysPerSec < millionRayTriPerSec && millionRayTriPerSec < maxMillionRaysPerSec,
                 "Rays per second {0:f2} not between {1} and {2} (millions)", millionRayTriPerSec, minMillionRaysPerSec, maxMillionRaysPerSec);
@@ -351,8 +352,8 @@ namespace Engine3D_Tests
             const double maxMillionRaysPerSec = 33.0;
 #elif APPVEYOR_PERFORMANCE_MARGINS
             // AppVeyor build server
-            const double minMillionRaysPerSec = 110.0;
-            const double maxMillionRaysPerSec = 130.0;
+            const double minMillionRaysPerSec = 130.0;
+            const double maxMillionRaysPerSec = 170.0;
 #else
             // my laptop in High Performance mode
             const double minMillionRaysPerSec = 68.0;
@@ -390,7 +391,7 @@ namespace Engine3D_Tests
                     numRaysHit++;
             }
             var elapsedTime = DateTime.Now - startTime;
-            //Assert.IsTrue(numRays * 0.2 < numRaysHit && numRaysHit < numRays * 0.3, "Num rays hit {0} should be 20-30% of total rays {1}", numRaysHit, numRays);
+            Assert.IsTrue(numRays * 0.6 < numRaysHit && numRaysHit < numRays * 0.7, "Num rays hit {0} should be 60-70% of total rays {1}", numRaysHit, numRays);
             var millionRayTriPerSec = numRays / 1000000.0 / elapsedTime.TotalSeconds * numTriangles;
             Assert.IsTrue(minMillionRaysPerSec < millionRayTriPerSec && millionRayTriPerSec < maxMillionRaysPerSec,
                 "Rays per second {0:f2} not between {1} and {2} (millions)", millionRayTriPerSec, minMillionRaysPerSec, maxMillionRaysPerSec);
