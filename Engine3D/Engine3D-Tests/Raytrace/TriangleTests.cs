@@ -349,6 +349,109 @@ namespace Engine3D_Tests
         }
 
         [TestMethod]
+        public void ClipLineSegmentToAABBPerformance()
+        {
+#if DEBUG
+            // my laptop in High Performance mode
+            const double minMillionLinesPerSec = 0;
+            const double maxMillionLinesPerSec = 0;
+#elif APPVEYOR_PERFORMANCE_MARGINS
+            // AppVeyor build server
+            const double minMillionLinesPerSec = 0;
+            const double maxMillionLinesPerSec = 0;
+#else
+            // my laptop in High Performance mode
+            const double minMillionLinesPerSec = 0.45; // lines extend 100 units outside of box
+            const double maxMillionLinesPerSec = 0.60;
+            //const double minMillionLinesPerSec = 0.85; // lines extend barely outside of box
+            //const double maxMillionLinesPerSec = 1.2;
+#endif
+
+            const int numLines = 1000000;
+            var box = new AxisAlignedBox(new Vector(-0.5, -0.5, -0.5), new Vector(0.5, 0.5, 0.5));
+            var lineTouchesBox = 0;
+
+            DateTime startTime = DateTime.Now;
+            for (var i = 0; i < numLines; i++)
+            {
+                //var start = new Vector(0.5, 0.5, 0.5);
+                //var start = MakeRandomVector(-0.3, 0.3, -0.3, 0.3, 0.5, 1);
+                //var end = MakeRandomVector(10, 10, 10);
+
+                var end = MakeRandomVector(-0.3, 0.3, -0.3, 0.3, 0.5, 1);
+                var dir = MakeRandomVector(-0.5, 0.5, -0.5, 0.5, -1, -1);
+                var start = end + dir * 100;
+
+                //var dir = MakeRandomVector(-0.5, 0.5, -0.5, 0.5, -1, -1);
+                //var dir = MakeRandomVector(1, 1, -1);
+                //var dir = end - start;
+
+                if(box.ClipLineSegment(ref start, ref end))
+                    lineTouchesBox++;
+            }
+            var elapsedTime = DateTime.Now - startTime;
+            Assert.IsTrue(numLines * 0.998 < lineTouchesBox && lineTouchesBox <= numLines * 1.0,
+                "Num lines touching box {0} should be roughly same as total lines {1}", lineTouchesBox, numLines);
+            //Assert.IsTrue(numLines * 0.380 < lineTouchesBox && lineTouchesBox <= numLines * 0.383,
+            //    "Num lines touching box {0} should be roughly 40% of total lines {1}", lineTouchesBox, numLines);
+            var millionLinesPerSec = numLines / 1000000.0 / elapsedTime.TotalSeconds;
+            Assert.IsTrue(minMillionLinesPerSec < millionLinesPerSec && millionLinesPerSec < maxMillionLinesPerSec,
+                "Lines per second {0:f3} not between {1} and {2} (millions)", millionLinesPerSec, minMillionLinesPerSec, maxMillionLinesPerSec);
+            Console.WriteLine("Performance: {0} million lines per second", millionLinesPerSec);
+        }
+
+        [TestMethod]
+        public void LineIntersectAABBPerformance()
+        {
+#if DEBUG
+            // my laptop in High Performance mode
+            const double minMillionLinesPerSec = 0;
+            const double maxMillionLinesPerSec = 0;
+#elif APPVEYOR_PERFORMANCE_MARGINS
+            // AppVeyor build server
+            const double minMillionLinesPerSec = 0;
+            const double maxMillionLinesPerSec = 0;
+#else
+            // my laptop in High Performance mode
+            const double minMillionLinesPerSec = 0.94;
+            const double maxMillionLinesPerSec = 1.10;
+#endif
+
+            const int numLines = 1000000;
+            var box = new AxisAlignedBox(new Vector(-0.5, -0.5, -0.5), new Vector(0.5, 0.5, 0.5));
+            var lineTouchesBox = 0;
+
+            DateTime startTime = DateTime.Now;
+            for (var i = 0; i < numLines; i++)
+            {
+                //var start = new Vector(0.5, 0.5, 0.5);
+                //var start = MakeRandomVector(-0.3, 0.3, -0.3, 0.3, 0.5, 1);
+                //var end = MakeRandomVector(10, 10, 10);
+
+                var end = MakeRandomVector(-0.3, 0.3, -0.3, 0.3, 0.5, 1);
+                var dir = MakeRandomVector(-0.5, 0.5, -0.5, 0.5, -1, -1);
+                var start = end + dir * 100;
+
+                //var dir = MakeRandomVector(-0.5, 0.5, -0.5, 0.5, -1, -1);
+                //var dir = MakeRandomVector(1, 1, -1);
+                //var dir = end - start;
+
+                var info = box.IntersectLineSegment(start, end);
+                if (info != null)
+                    lineTouchesBox++;
+            }
+            var elapsedTime = DateTime.Now - startTime;
+            Assert.IsTrue(numLines * 0.998 < lineTouchesBox && lineTouchesBox <= numLines * 1.0,
+                "Num lines touching box {0} should be roughly same as total lines {1}", lineTouchesBox, numLines);
+            //Assert.IsTrue(numLines * 0.380 < lineTouchesBox && lineTouchesBox <= numLines * 0.383,
+            //    "Num lines touching box {0} should be roughly 40% of total lines {1}", lineTouchesBox, numLines);
+            var millionLinesPerSec = numLines / 1000000.0 / elapsedTime.TotalSeconds;
+            Assert.IsTrue(minMillionLinesPerSec < millionLinesPerSec && millionLinesPerSec < maxMillionLinesPerSec,
+                "Lines per second {0:f3} not between {1} and {2} (millions)", millionLinesPerSec, minMillionLinesPerSec, maxMillionLinesPerSec);
+            Console.WriteLine("Performance: {0} million lines per second", millionLinesPerSec);
+        }
+
+        [TestMethod]
         public void BuildVoxelGridPerformance()
         {
 #if DEBUG

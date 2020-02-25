@@ -114,6 +114,7 @@ namespace Engine3D.Raytrace
             IntersectionInfo closest = new IntersectionInfo();
             closest.rayFrac = double.MaxValue;
 
+            // TODO: somehow intersect line against all planes at once, or guess at nearest plane?
             foreach (Plane plane in planes)
             {
                 // Does ray intersect this plane?
@@ -210,6 +211,11 @@ namespace Engine3D.Raytrace
                 // so original line segment must intersect box at two points.
                 intersection = IntersectLineSegment(end, originalStart);
                 Contract.Assume(intersection != null, "Intersection must exist");
+
+                // TODO: HACK! This should never happen - logic bug!
+                //if (intersection == null)
+                //    return true;
+
                 end = intersection.pos;
             }
             return true;
@@ -305,7 +311,7 @@ namespace Engine3D.Raytrace
         /// <param name="tri"></param>
         /// <param name="planes"></param>
         /// <returns>True iff triangle is 'outside' one of the planes</returns>
-        static private bool IsTrianglesOutsidePlanes(Triangle tri, IEnumerable<Plane> planes)
+        private static bool IsTrianglesOutsidePlanes(Triangle tri, IEnumerable<Plane> planes)
         {
             // TODO: a triangle can be 'inside' all planes (each plane has at least one triangle vertex 'inside' the plane),
             // yet the triangle can still not intersect the volume defined by the planes.
