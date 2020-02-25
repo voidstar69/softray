@@ -3,15 +3,24 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using Engine3D;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Engine3D.Raytrace;
+using Assert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+using Triangle = Engine3D.Raytrace.Triangle;
 using Vector = Engine3D.Vector;
+
+// TODO: Use Benchmark.net to micro-benchmark some raytracing and make performance measurements more accurate
+// TODO: Make a test that passes random parameters to tree building (tree depth vs max tris per node) for large model, to find optimal parameters for given model
 
 namespace Engine3D_Tests
 {
     [TestClass]
     public class SpatialSubdivisionTests
     {
+        private const string largeModelFileName = "../../large-model.3ds";
+
         private static Random random = new Random();
         private static RenderContext context = new RenderContext(random);
 
@@ -279,6 +288,142 @@ namespace Engine3D_Tests
             Assert.IsTrue(minMillionRaysPerSec < millionRayTriPerSec && millionRayTriPerSec < maxMillionRaysPerSec,
                 "Rays per second {0:f2} not between {1} and {2} (millions)", millionRayTriPerSec, minMillionRaysPerSec, maxMillionRaysPerSec);
             Console.WriteLine("Performance: {0} million ray/tri per second", millionRayTriPerSec);
+        }
+
+        [TestMethod]
+        public void RayIntersectLargeModelFromInside_Performance()
+        {
+#if DEBUG
+            // my laptop in High Performance mode
+            const double minMillionRaysPerSec = 35.0;
+            const double maxMillionRaysPerSec = 45.0;
+#elif APPVEYOR_PERFORMANCE_MARGINS
+            // AppVeyor build server
+            const double minMillionRaysPerSec = 210.0;
+            const double maxMillionRaysPerSec = 240.0;
+#else
+            // my laptop in High Performance mode
+            const double minMillionRaysPerSec = 215.0;
+            const double maxMillionRaysPerSec = 260.0;
+#endif
+
+            // Load 3D model from disk
+            var model = new Model();
+            using (Stream stream = new FileStream(largeModelFileName, FileMode.Open, FileAccess.Read))
+            {
+                model.Load3dsModelFromStream(stream);
+            }
+
+            List<Triangle> triangleList = MakeRayTracableGeometry_simple(model);
+            int numTriangles = triangleList.Count;
+
+            SpatialSubdivision geometryInTree = MakeRayTracableGeometry_subdivided(triangleList, model);
+
+            //TestTree_InsideOut(geometryInTree, triangleList, numRays: 10000); // 1m:25s
+
+            // Inside-out rays
+            // 1.3s for 1 million rays when using triangleSpaceSize (i.e. mostly missing model bounding box)
+            // 10.4s for 10,000 rays when using unit cube space!
+            const int numRays = 1000;
+            var numRaysHit = 0;
+            DateTime startTime = DateTime.Now;
+            for (var i = 1; i <= numRays; i++)
+            {
+                var start = MakeRandomVector(-0.5, 0.5, -0.5, 0.5, -0.5, 0.5);
+                var dir = MakeRandomVector(-1, 1, -1, 1, -1, 1);
+                var info = geometryInTree.IntersectRay(start, dir, context);
+                if (info != null)
+                    numRaysHit++;
+            }
+            var elapsedTime = DateTime.Now - startTime;
+            Assert.IsTrue(numRays * 0.4 < numRaysHit && numRaysHit < numRays * 0.5, "Num rays hit {0} should be 40-50% of total rays {1}", numRaysHit, numRays);
+            var millionRayTriPerSec = numRays / 1000000.0 / elapsedTime.TotalSeconds * numTriangles;
+            Assert.IsTrue(minMillionRaysPerSec < millionRayTriPerSec && millionRayTriPerSec < maxMillionRaysPerSec,
+                "Rays per second {0:f2} not between {1} and {2} (millions)", millionRayTriPerSec, minMillionRaysPerSec, maxMillionRaysPerSec);
+            Console.WriteLine("Performance: {0} million ray/tri per second", millionRayTriPerSec);
+        }
+
+        [TestMethod]
+        public void RayIntersectLargeModelMostlyFromOutside_Performance()
+        {
+#if DEBUG
+            // my laptop in High Performance mode
+            const double minMillionRaysPerSec = 30.0;
+            const double maxMillionRaysPerSec = 33.0;
+#elif APPVEYOR_PERFORMANCE_MARGINS
+            // AppVeyor build server
+            const double minMillionRaysPerSec = 130.0;
+            const double maxMillionRaysPerSec = 170.0;
+#else
+            // my laptop in High Performance mode
+            const double minMillionRaysPerSec = 94.0;
+            const double maxMillionRaysPerSec = 109.0;
+#endif
+
+            // Load 3D model from disk
+            var model = new Model();
+            using (Stream stream = new FileStream(largeModelFileName, FileMode.Open, FileAccess.Read))
+            {
+                model.Load3dsModelFromStream(stream);
+            }
+
+            List<Triangle> triangleList = MakeRayTracableGeometry_simple(model);
+            int numTriangles = triangleList.Count;
+
+            SpatialSubdivision geometryInTree = MakeRayTracableGeometry_subdivided(triangleList, model);
+
+            //TestTree_OutsideIn(geometryInTree, triangleList, numRays: 10000); // 1m:44s
+            
+            // Outside-in rays
+            // 1.9s for 1 million rays when using triangleSpaceSize (i.e. mostly missing model bounding box)
+            // 12.8s for 10,000 rays when using unit cube space!
+            // So rendering a 1024x768 image should take around 13 mins. I measured the (4 thread) renderer taking 2.5 mins.
+            const int numRays = 1000;
+            var numRaysHit = 0;
+            DateTime startTime = DateTime.Now;
+            for (var i = 1; i <= numRays; i++)
+            {
+                var start = MakeRandomVector(-5, 5, -5, 5, -5, 5);
+                var end = MakeRandomVector(-0.5, 0.5, -0.5, 0.5, -0.5, 0.5);
+                var dir = end - start;
+                var info = geometryInTree.IntersectRay(start, dir, context);
+                if (info != null)
+                    numRaysHit++;
+            }
+            var elapsedTime = DateTime.Now - startTime;
+            Assert.IsTrue(numRays * 0.6 < numRaysHit && numRaysHit < numRays * 0.7, "Num rays hit {0} should be 60-70% of total rays {1}", numRaysHit, numRays);
+            var millionRayTriPerSec = numRays / 1000000.0 / elapsedTime.TotalSeconds * numTriangles;
+            Assert.IsTrue(minMillionRaysPerSec < millionRayTriPerSec && millionRayTriPerSec < maxMillionRaysPerSec,
+                "Rays per second {0:f2} not between {1} and {2} (millions)", millionRayTriPerSec, minMillionRaysPerSec, maxMillionRaysPerSec);
+            Console.WriteLine("Performance: {0} million ray/tri per second", millionRayTriPerSec);
+        }
+
+        private static List<Triangle> MakeRayTracableGeometry_simple(Model model)
+        {
+            // Convert the 3D triangle model into a set of triangle objects that can be ray traced
+            var geom = new List<Triangle>();
+            int triIndex = 0;
+            foreach (Engine3D.Triangle tri in model.Triangles)
+            {
+                Vector v1 = model.Vertices[tri.vertexIndex1].pos;
+                Vector v2 = model.Vertices[tri.vertexIndex2].pos;
+                Vector v3 = model.Vertices[tri.vertexIndex3].pos;
+                uint color = Surface.PackColorAndAlpha(tri.diffuseMaterial, 1.0);
+                // let the triangle know its index within this collection of geometry
+                geom.Add(new Triangle(v1, v2, v3, color) {TriangleIndex = triIndex});
+                triIndex++;
+            }
+
+            return geom;
+        }
+
+        private static SpatialSubdivision MakeRayTracableGeometry_subdivided(List<Triangle> triangleList, Model model)
+        {
+            // Create a box bounding the 3D triangle model.
+            var boundingBox = new AxisAlignedBox(model.Min, model.Max);
+
+            // Create the spatial subdivison object.
+            return new SpatialSubdivision(triangleList, boundingBox);
         }
 
         [TestMethod]

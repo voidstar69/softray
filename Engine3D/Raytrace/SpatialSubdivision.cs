@@ -1,6 +1,6 @@
 ﻿//#define VISUALISE_TREE      // visualise the tree nodes as colored blocks
 #define SPLIT_LONGEST_AXIS
-//#define ADAPTIVE_SPLIT    // split node at centroid of contained triangles
+#define ADAPTIVE_SPLIT    // split node at centroid of contained triangles
 //#define COLOR_NODES       // color triangles based on their containing node
 //#define LOG_SPLITS
 
