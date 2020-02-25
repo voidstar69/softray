@@ -303,8 +303,8 @@ namespace Engine3D_Tests
             const double maxMillionRaysPerSec = 240.0;
 #else
             // my laptop in High Performance mode
-            const double minMillionRaysPerSec = 73.0;
-            const double maxMillionRaysPerSec = 90.0;
+            const double minMillionRaysPerSec = 215.0;
+            const double maxMillionRaysPerSec = 260.0;
 #endif
 
             // Load 3D model from disk
@@ -356,8 +356,8 @@ namespace Engine3D_Tests
             const double maxMillionRaysPerSec = 170.0;
 #else
             // my laptop in High Performance mode
-            const double minMillionRaysPerSec = 68.0;
-            const double maxMillionRaysPerSec = 79.0;
+            const double minMillionRaysPerSec = 94.0;
+            const double maxMillionRaysPerSec = 109.0;
 #endif
 
             // Load 3D model from disk
