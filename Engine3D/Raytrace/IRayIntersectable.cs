@@ -15,6 +15,26 @@ namespace Engine3D.Raytrace
         // TODO: store triangle index or reference to intersected object?
         //public IRayIntersectable objHit;
         public int triIndex = -1;   // -1 means that the intersected geometry is not a triangle
+
+        public override bool Equals(object obj)
+        {
+            var other = obj as IntersectionInfo;
+            if (other == null)
+                return false;
+
+            return rayFrac == other.rayFrac &&
+                   pos == other.pos &&
+                   normal == other.normal &&
+                   color == other.color;
+        }
+
+        public override int GetHashCode()
+        {
+            return ((rayFrac.GetHashCode()
+                   * 31 + pos.GetHashCode())
+                   * 31 + normal.GetHashCode())
+                   * 31 + color.GetHashCode();
+        }
     }
 
     public class RenderContext

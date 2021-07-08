@@ -55,7 +55,7 @@ namespace Engine3D_Tests
 
         private int numMissingBaselines = 0;
 
-        private static int[] pixels = new int[maxImageWidth * maxImageHeight];
+        private static int[] pixels;
 
         [TestInitialize]
         public void Init()
@@ -69,6 +69,7 @@ namespace Engine3D_Tests
             //renderer.BackgroundColor = 0xff0000; // red
             //renderer.BackgroundColor = 0x0000ff; // blue
 
+            pixels = new int[resolution * resolution];
             renderer.SetRenderingSurface(resolution, resolution, pixels);
 
             // Load 3D model from disk
@@ -167,7 +168,7 @@ namespace Engine3D_Tests
         public void RaytraceStaticShadow()
         {
             RaytraceScenario(shadows: true, staticShadows: true);
-            RaytraceScenario(shadows: true, staticShadows: true, shading: false);
+            //RaytraceScenario(shadows: true, staticShadows: true, shading: false);
 
             if (numMissingBaselines > 0)
                 Assert.Fail("{0} missing baseline images were recreated", numMissingBaselines);
@@ -192,7 +193,7 @@ namespace Engine3D_Tests
         // TODO: produced image is slightly different if this test is run in isolation vs run together with test RaytraceStaticShadow. Why?
         // TODO: number of threads affects resulting image, slighty changing quite a few pixels
         // Most likely the threads are racing each other to update the shadow cache, causing non-deterministic behaviour!
-        [TestMethod, Ignore]
+        [TestMethod /*, Ignore*/]
         public void RaytraceStaticShadowAndFocalBlur()
         {
             RaytraceScenario(focalBlur: true, shadows: true, staticShadows: true, subPixelRes: 4);
